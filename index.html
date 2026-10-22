@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Kennsluhub Grímsonar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: a teacher's key board — chalkboard header band, then one shelf per subject with link tiles; search + edit in a sticky bar. */
+:root{
+  --bg:#eef1ee; --surface:#ffffff; --ink:#1b2a26; --ink-dim:#5b6b66; --line:#d5ddd8;
+  --board:#1f3a33; --chalk:#f2efe4; --chalk-dim:#b9c6bd;
+  --math:#e0a91f; --isl:#d9653f; --ens:#3f7fb0; --sam:#5a9a5f; --kenn:#7d6aa8;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141f1c; --surface:#1d2b27; --ink:#eef1ee; --ink-dim:#a5b3ad; --line:#2f403b;
+  --math:#f5c84c; --isl:#ff8f6b; --ens:#79b4e0; --sam:#8cc98f; --kenn:#b6a3e0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141f1c; --surface:#1d2b27; --ink:#eef1ee; --ink-dim:#a5b3ad; --line:#2f403b;
+  --math:#f5c84c; --isl:#ff8f6b; --ens:#79b4e0; --sam:#8cc98f; --kenn:#b6a3e0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+header.hero{background:var(--board);color:var(--chalk);padding-block:34px 30px;
+  background-image:radial-gradient(ellipse at 20% 0%,#2b5148,var(--board) 70%)}
+.hero small{display:block;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,60px);margin:4px 0 8px;line-height:1;text-wrap:balance}
+.hero p{margin:0;color:var(--chalk-dim);max-width:60ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:12px}
+.bar .inner{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input[type=search],.f input,.f select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+input[type=search]{flex:1 1 240px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;font-weight:700;cursor:pointer;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px}
+button:hover{border-color:var(--ink-dim)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--math);outline-offset:2px}
+main{padding-block:26px 60px}
+main .inner{display:flex;flex-direction:column;gap:34px}
+.shelf h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+.shelf h2::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--c)}
+.shelf h2 span{font-family:var(--body);font-weight:400;font-size:14px;color:var(--ink-dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1.5px solid var(--line);
+  border-top:5px solid var(--c);border-radius:12px;padding:14px 16px 14px;color:inherit;text-decoration:none;min-width:0;transition:transform .15s,border-color .15s}
+a.tile:hover{transform:translateY(-2px);border-color:var(--c)}
+.tile h3{font-family:var(--display);font-weight:500;font-size:19px;margin:0;line-height:1.15}
+.tile p{margin:0;font-size:14.5px;color:var(--ink-dim)}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px;align-items:center}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1.5px solid var(--line);color:var(--ink-dim)}
+.host{font-size:12.5px;color:var(--ink-dim);margin-left:auto}
+.tile.missing{border-style:dashed;border-top-style:solid}
+.tile.missing .host{color:var(--isl);font-weight:700}
+.edit{position:absolute;top:8px;right:8px;padding:3px 10px;font-size:13px}
+.editing a.tile{pointer-events:none}
+.editing .tile{padding-right:60px}
+.editing .edit{pointer-events:auto}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:16px}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--ink-dim);min-width:0}
+.f .full{grid-column:1/-1}
+.f .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.f .danger{margin-left:auto;color:var(--isl)}
+.note{font-size:13.5px;color:var(--ink-dim);max-width:70ch}
+.empty{color:var(--ink-dim)}
+@media (max-width:560px){.f{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+</style>
+</head>
+<body>
+<header class="hero pad"><div class="inner">
+  <h1>Kennsluhub</h1>
+  <p>Allir leikirnir, kennaraborðin og verkfærin á einum stað. Smelltu á reit til að opna síðuna í nýjum flipa.</p>
+</div></header>
+
+<div class="bar pad"><div class="inner">
+  <input type="search" id="q" placeholder="Leita, t.d. „samheiti“ eða „kennari“" aria-label="Leita">
+  <div class="chips" id="who" role="group" aria-label="Fyrir hvern">
+    <button data-w="" aria-pressed="true">Allt</button>
+    <button data-w="Nemendur">Nemendur</button>
+    <button data-w="Skjávarpi">Skjávarpi</button>
+    <button data-w="Kennari">Kennari</button>
+  </div>
+  <button id="editBtn" aria-pressed="false">✎ Breyta</button>
+</div></div>
+
+<main class="pad"><div class="inner" id="root"></div></main>
+
+<script>
+const SUBJ={math:"Stærðfræði",isl:"Íslenska",ens:"Enska",sam:"Samfélagsfræði",kenn:"Kennaraverkfæri"};
+const A="https://claude.ai/code/artifact/";
+// Grunnlisti. Til að breyta varanlega: breyttu hér (eða notaðu ✎ Breyta, sem vistar í þessum vafra).
+const BASE=[
+ {id:"reiknum",s:"math",t:"Reiknum",d:"Stærðfræðileikurinn: merki, pipardæmi og færnimiðað nám.",w:"Nemendur",u:"https://steingrimursig.github.io/reiknum/reiknum.html"},
+ {id:"reiknum-kennari",s:"math",t:"Reiknum – kennarasíða",d:"Framgangur nemenda í rauntíma eftir bekkjarkóða.",w:"Kennari",u:"https://steingrimursig.github.io/reiknum/kennari.html"},
+ {id:"reiknum-kynning",s:"math",t:"Reiknum – kynning",d:"Kynning á leiknum fyrir nemendur og foreldra.",w:"Skjávarpi",u:"https://steingrimursig.github.io/reiknum/kynning.html"},
+ {id:"midjan",s:"math",t:"Hvar er miðjan?",d:"Meðaltal, miðgildi og tíðasta gildi.",w:"Skjávarpi",u:A+"9b5c5255-a5bf-4966-a556-1dcd0b538dbe"},
+ {id:"ratleikur",s:"math",t:"Stærðfræðiratleikur",d:"Ratleikur fyrir foreldra og börn með QR-kóðum.",w:"Nemendur",u:"https://steingrimursig.github.io/Ratleikur/staerdfraedi.html"},
+ {id:"radgatur",s:"isl",t:"Ráðgátustofan",d:"Fréttir sem verkefni: orðaforði, lesskilningur og samfélagsfræði.",w:"Nemendur",u:"https://steingrimursig.github.io/radgatur/"},
+ {id:"samheiti",s:"isl",t:"Samheiti og andheiti",d:"Flip-spjöld: orð, smellt til að sýna samheiti, andheiti eða bæði.",w:"Skjávarpi",u:A+"766566ce-3958-4eb8-884e-46aa80727bfa"},
+ {id:"thatid",s:"ens",t:"Þátíðartaflan",d:"Enskar sagnir: grunnmynd → þátíð, reglulegar og óreglulegar.",w:"Skjávarpi",u:A+"7fe6827c-8433-4b5e-b35b-e81e21102844"},
+ {id:"spooky",s:"ens",t:"Spooky Night",d:"Einfalt verkefni í Past Simple.",w:"Nemendur",u:A+"4a8d166b-65a9-47fe-9282-fd4ade5fbe61"},
+ {id:"sjalfbaerni",s:"sam",t:"Sjálfbærni",d:"Kennsluefni um sjálfbærni.",w:"Skjávarpi",u:A+"dbf7fca7-e204-49c7-b53f-1e466786208c"},
+ {id:"verkefnaspjold",s:"sam",t:"Verkefnaspjöld",d:"Sjálfbærni, orka og loftslag.",w:"Nemendur",u:A+"28676e9f-c719-4aae-8ab2-a977a748bad9"},
+ {id:"eldgos",s:"sam",t:"Eldgosið sem breytti Evrópu",d:"Lesskilningsverkefni.",w:"Nemendur",u:A+"83b4d980-2ebb-4ed3-8a10-e108d6c06839"},
+ {id:"namsmat",s:"kenn",t:"Námsmatskerfið",d:"Nemendur, verkefni, matsviðmið, hæfniviðmið og einkunnir.",w:"Kennari",u:""},
+ {id:"haefni",s:"kenn",t:"Hæfniviðmið skólans",d:"Sameiginleg skráning kennara eftir árgöngum og fögum.",w:"Kennari",u:""},
+ {id:"skipulag",s:"kenn",t:"Kennsluskipulag",d:"Hugsandi kennslustofa.",w:"Kennari",u:A+"985c178b-8f96-48e8-be09-9429e38d3786"}
+];
+const KEY="kennsluhub-v1";
+let store={over:{},added:[],hidden:[]};
+try{const r=localStorage.getItem(KEY);if(r)store=Object.assign(store,JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}};
+let q="",who="",editing=false,openForm=null;
+const root=document.getElementById("root");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const items=()=>[...BASE.filter(b=>!store.hidden.includes(b.id)).map(b=>({...b,...(store.over[b.id]||{})})),...store.added];
+const host=u=>{try{const h=new URL(u).hostname;return h.includes("claude.ai")?"Claude":h.includes("github.io")?"GitHub":h;}catch(e){return "";}};
+
+function form(it,s){
+  const x=it||{id:"",s,t:"",d:"",w:"Nemendur",u:""};
+  return `<form class="f" id="ef" data-id="${esc(x.id)}">
+   <label class="full">Heiti<input id="f-t" required value="${esc(x.t)}"></label>
+   <label class="full">Slóð<input id="f-u" type="url" placeholder="https://…" value="${esc(x.u)}"></label>
+   <label class="full">Lýsing<input id="f-d" value="${esc(x.d)}"></label>
+   <label>Fag<select id="f-s">${Object.entries(SUBJ).map(([k,v])=>`<option value="${k}"${k===x.s?" selected":""}>${v}</option>`).join("")}</select></label>
+   <label>Fyrir<select id="f-w">${["Nemendur","Skjávarpi","Kennari"].map(v=>`<option${v===x.w?" selected":""}>${v}</option>`).join("")}</select></label>
+   <div class="row"><button type="submit" aria-pressed="true">Vista</button><button type="button" id="f-c">Hætta við</button>
+   ${x.id?`<button type="button" class="danger" id="f-del">Fjarlægja</button>`:""}</div></form>`;
+}
+function render(){
+  const all=items(), term=q.trim().toLowerCase();
+  root.classList.toggle("editing",editing);
+  let html="";
+  for(const [s,name] of Object.entries(SUBJ)){
+    const list=all.filter(i=>i.s===s&&(!who||i.w===who)&&(!term||(i.t+" "+i.d+" "+name).toLowerCase().includes(term)));
+    if(!list.length&&!editing)continue;
+    html+=`<section class="shelf" style="--c:var(--${s})"><h2>${name} <span>${list.length} ${list.length===1?"síða":"síður"}</span></h2><div class="grid">`;
+    for(const i of list){
+      if(openForm===i.id){html+=`<div class="full" style="grid-column:1/-1">${form(i)}</div>`;continue;}
+      const tagged=`<div class="meta"><span class="tag">${esc(i.w)}</span><span class="host">${i.u?esc(host(i.u)):"Slóð vantar"}</span></div>`;
+      const body=`<h3>${esc(i.t)}</h3><p>${esc(i.d)}</p>${tagged}`;
+      const btn=editing?`<button class="edit" data-e="${esc(i.id)}">✎</button>`:"";
+      html+=i.u&&!editing?`<a class="tile" href="${esc(i.u)}" target="_blank" rel="noopener">${body}</a>`
+        :`<div class="tile${i.u?"":" missing"}">${btn}${body}${!editing&&!i.u?`<button class="edit" data-e="${esc(i.id)}" style="position:static;align-self:flex-start;margin-top:6px">+ Bæta við slóð</button>`:""}</div>`;
+    }
+    if(editing) html+=openForm==="new:"+s?`<div style="grid-column:1/-1">${form(null,s)}</div>`:`<button data-n="${s}" style="border-radius:12px;border-style:dashed;min-height:90px">+ Ný síða</button>`;
+    html+=`</div></section>`;
+  }
+  if(!html)html=`<p class="empty">Ekkert fannst. Prófaðu annað leitarorð.</p>`;
+  if(editing)html+=`<p class="note">Breytingar vistast í þessum vafra. Ef þú setur hubbinn á GitHub sem index.html geturðu líka breytt grunnlistanum (BASE) efst í kóðanum, þá sjá allir sömu tenglana. <button id="reset" style="margin-left:6px">Endurstilla allt</button></p>`;
+  root.innerHTML=html;
+  const f=document.getElementById("ef");
+  if(f){f.querySelector("#f-t").focus();
+    f.onsubmit=e=>{e.preventDefault();const id=f.dataset.id;
+      const v={t:f.querySelector("#f-t").value.trim(),u:f.querySelector("#f-u").value.trim(),d:f.querySelector("#f-d").value.trim(),s:f.querySelector("#f-s").value,w:f.querySelector("#f-w").value};
+      if(!id)store.added.push({id:"u"+Date.now(),...v});
+      else if(BASE.some(b=>b.id===id))store.over[id]=v;
+      else Object.assign(store.added.find(a=>a.id===id),v);
+      openForm=null;save();render();};
+    f.querySelector("#f-c").onclick=()=>{openForm=null;render();};
+    const del=f.querySelector("#f-del");
+    if(del)del.onclick=()=>{
+      if(del.dataset.sure){const id=f.dataset.id;
+        if(BASE.some(b=>b.id===id))store.hidden.push(id);else store.added=store.added.filter(a=>a.id!==id);
+        openForm=null;save();render();}
+      else{del.dataset.sure="1";del.textContent="Smelltu aftur til að staðfesta";}};
+  }
+}
+root.addEventListener("click",e=>{
+  const ed=e.target.closest("[data-e]"),nw=e.target.closest("[data-n]");
+  if(ed){e.preventDefault();openForm=ed.dataset.e;render();}
+  else if(nw){openForm="new:"+nw.dataset.n;render();}
+  else if(e.target.id==="reset"){
+    if(e.target.dataset.sure){store={over:{},added:[],hidden:[]};save();render();}
+    else{e.target.dataset.sure="1";e.target.textContent="Smelltu aftur til að staðfesta";}}
+});
+document.getElementById("q").addEventListener("input",e=>{q=e.target.value;render();});
+document.querySelectorAll("#who button").forEach(b=>b.onclick=()=>{who=b.dataset.w;
+  document.querySelectorAll("#who button").forEach(x=>x.setAttribute("aria-pressed",x===b));render();});
+const eb=document.getElementById("editBtn");
+eb.onclick=()=>{editing=!editing;openForm=null;eb.setAttribute("aria-pressed",editing);eb.textContent=editing?"✓ Lokið":"✎ Breyta";render();};
+render();
+</script>
+</body>
+</html>
