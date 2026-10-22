@@ -7,8 +7,32 @@ radgatur/
 ├── index.html              forsíðan með möppunum
 ├── css/stofan.css          sameiginlegt útlit fyrir allar síður
 └── mal-01-radgatur/
-    └── index.html          fréttin og öll verkefnin
+    ├── index.html          fréttin og öll verkefnin
+    └── stillingar.js       hér opnar kennarinn læsta hluta
 ```
+
+## Að opna læsta hluta
+
+Samfélagsfræði og Að lokum eru læst þar til þú opnar þau.
+
+1. Opnaðu `radgatur/mal-01-radgatur/stillingar.js` á GitHub og ýttu á blýantinn (Edit).
+2. Breyttu `false` í `true` við þann hluta sem á að opna.
+3. Ýttu á **Commit changes**. Breytingin sést hjá nemendum eftir 1–10 mínútur. Nemendur sem eru með síðuna opna þurfa að endurhlaða hana.
+
+`rod: true` þýðir að nemendur verða að klára *Fyrir lestur* og *Á meðan lesið er* áður en orðaforði og lesskilningur opnast. Ef þú setur `false` er það opið strax.
+
+## Leiðin
+
+| Hluti | Krafa |
+| --- | --- |
+| Fyrir lestur | Bæði verkefnin |
+| Á meðan lesið er | Verkefnið |
+| Orðaforði | Tvö af fimm |
+| Lesskilningur | Tvö af fjórum |
+| Samfélagsfræði | Öll, læst þar til kennari opnar |
+| Að lokum | Öll, læst þar til kennari opnar |
+
+Nemendur merkja sjálfir við *Ég er búin(n) með verkefnið* neðst á hverri verkefnasíðu.
 
 Slóðin verður `steingrimursig.github.io/radgatur/`.
 

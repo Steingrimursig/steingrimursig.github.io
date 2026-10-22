@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="../css/stofan.css">
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<div class="wrap wide" id="app"></div>
+<script src="stillingar.js"></script>
 <script>
 /* Lykill fyrir vistun í vafra. Hvert mál þarf sinn eigin lykil. */
 const KEY = 'mal01:';
@@ -63,12 +64,12 @@ const MYST = ['Dansplágan','Höfundur Njálu','Hádegismaturinn og hulduefnið'
 
 /* ---------- verkefni ---------- */
 const GROUPS = [
- {t:'Fyrir lestur', s:'ekki fyrirlestur, lofa', ids:['hvadveit','ordaspa']},
- {t:'Á meðan lesið er', ids:['ordaspor']},
- {t:'Orðaforði', ids:['kjarnaord','frayer','samsett','ordtok','ordflokkar']},
- {t:'Lesskilningur', ids:['spurningar','frettpistill','hugarkort','samantekt']},
- {t:'Samfélagsfræði', ids:['timalina','danspagan','umraeda','hopverkefni']},
- {t:'Að lokum', ids:['ritun','sjalfsmat']}
+ {key:'fyrir', t:'Fyrir lestur', s:'ekki fyrirlestur, lofa', need:'all', ids:['hvadveit','ordaspa']},
+ {key:'medan', t:'Á meðan lesið er', need:'all', after:['fyrir'], ids:['ordaspor']},
+ {key:'ordafordi', t:'Orðaforði', need:2, after:['medan'], ids:['kjarnaord','frayer','samsett','ordtok','ordflokkar']},
+ {key:'lesskilningur', t:'Lesskilningur', need:2, after:['medan'], ids:['spurningar','frettpistill','hugarkort','samantekt']},
+ {key:'samfelag', t:'Samfélagsfræði', need:'all', teacher:'samfelagsfraedi', ids:['timalina','danspagan','umraeda','hopverkefni']},
+ {key:'lokum', t:'Að lokum', need:'all', teacher:'adlokum', ids:['ritun','sjalfsmat']}
 ];
 const T = {};
 const def = (id, title, sub, render) => T[id] = {id,title,sub,render};
@@ -316,37 +317,93 @@ def('sjalfsmat','Sjálfsmat','Hvað lærði ég?', () => { const st=S.get('self'
 T.sjalfsmat.after = () => { SELF.forEach((_,i)=>document.getElementById('self'+i).onchange=e=>{ const st=S.get('self',{}); st[i]=e.target.checked; S.set('self',st); markDone('sjalfsmat'); }); };
 
 /* ---------- framvinda ---------- */
+const CFG = Object.assign({ samfelagsfraedi:false, adlokum:false, rod:true }, window.STILLINGAR || {});
 function markDone(id){ const d=S.get('done',{}); if(!d[id]){ d[id]=1; S.set('done',d); } }
+const lokid = () => S.get('lokid',{});
 const ORDER = GROUPS.flatMap(g=>g.ids);
+const groupOf = id => GROUPS.find(g=>g.ids.includes(id));
+const needCount = g => g.need==='all' ? g.ids.length : g.need;
+const doneCount = g => { const l=lokid(); return g.ids.filter(id=>l[id]).length; };
+const complete = g => doneCount(g) >= needCount(g);
+function groupLock(g){
+  if(g.teacher && !CFG[g.teacher]) return 'Kennarinn opnar þennan hluta síðar.';
+  if(CFG.rod && g.after){ const missing=g.after.map(k=>GROUPS.find(x=>x.key===k)).filter(x=>!complete(x));
+    if(missing.length) return 'Kláraðu fyrst: ' + missing.map(x=>x.t.toLowerCase()).join(' og ') + '.'; }
+  return null;
+}
+const NUM = {2:'tvö',4:'fjórum',5:'fimm'};
+function reqText(g){
+  if(g.need==='all') return g.ids.length===1 ? 'Skylduverkefni' : g.ids.length===2 ? 'Gerðu bæði' : 'Gerðu öll';
+  return `Veldu ${NUM[g.need]} af ${NUM[g.ids.length]}`;
+}
+function totals(){ return GROUPS.reduce((a,g)=>({tot:a.tot+needCount(g), dn:a.dn+Math.min(doneCount(g),needCount(g))}),{tot:0,dn:0}); }
+const LOCK = '<svg class="lockico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+/* ---------- leiðin mín (hliðarstika) ---------- */
+function pathPanel(){
+  const {tot,dn}=totals(), l=lokid();
+  return `<div class="path-head"><span class="eyebrow">LEIÐIN MÍN</span>
+    <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${dn}"><span style="width:${tot?dn/tot*100:0}%"></span></div>
+    <small>${dn} af ${tot} verkefnum lokið</small></div>
+  <button class="pl home ${view==='radgatur'?'cur':''}" data-go="radgatur"><span class="st">i</span>Fréttin og yfirlit</button>
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<div class="pg ${lock?'locked':''} ${c?'complete':''}">
+      <div class="pg-h"><b>${g.t}</b><span>${lock?LOCK+'Læst':c?'✓ Lokið':`${doneCount(g)} / ${needCount(g)}`}</span></div>
+      <p class="pg-note">${lock || reqText(g)}</p>
+      <ul>${g.ids.map(id=>`<li><button class="pl ${id===view?'cur':''} ${l[id]?'done':''}" data-go="${id}" ${lock?'disabled':''}><span class="st">${l[id]?'✓':''}</span>${T[id].title}</button></li>`).join('')}</ul>
+    </div>`;}).join('')}`;
+}
 
 /* ---------- síður ---------- */
+function header(back){
+  return `<header class="top"><button class="brand" data-go="heim">RÁÐGÁTUSTOFAN</button>${back}</header>`;
+}
 function news(){
-  const done=S.get('done',{});
-  return `<header class="top"><button class="brand" data-go="heim">RÁÐGÁTUSTOFAN</button><button class="back" data-go="heim">← Forsíða</button></header>
-  <article class="sheet">
+  const l=lokid(), started=S.get('done',{});
+  return `<article class="sheet">
    <span class="eyebrow">MÁL NR. 1 · PISTILL EFTIR SIF SIGMARSDÓTTUR</span>
    <h1>Óleyst íslensk ráðgáta: Veist þú svarið?</h1>
    <p class="lead">Höfundurinn fer yfir sjö af stærstu ráðgátum heims, allt frá miðöldum til dagsins í dag, og spyr hvort gervigreind sé að leysa allar gátur heimsins. Síðasta ráðgátan kemur á óvart.</p>
    <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">Lesa fréttina á Vísi ↗</a>
-   <p class="muted">Fréttin opnast í nýjum flipa. Komdu svo aftur hingað til að vinna verkefnin.</p>
+   <p class="muted">Byrjaðu á verkefnunum <b>fyrir lestur</b> áður en þú opnar fréttina. Þegar þú klárar verkefni ýtirðu á <em>Ég er búin(n)</em> neðst á síðunni.</p>
   </article>
-  ${GROUPS.map(g=>`<section class="group"><div class="group-title"><h2>${g.t}</h2>${g.s?`<small>(${g.s})</small>`:''}</div>
-   <div class="tasks">${g.ids.map(id=>`<button class="task" data-go="${id}"><b>${T[id].title}</b><span>${T[id].sub}</span>${done[id]?'<span class="done">Byrjað</span>':''}</button>`).join('')}</div></section>`).join('')}`;
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<section class="group"><div class="group-title"><h2>${g.t}</h2>${g.s?`<small>(${g.s})</small>`:''}
+      <span class="req ${lock?'is-locked':c?'is-done':''}">${lock?LOCK+'Læst':c?'✓ Lokið':`${reqText(g)} · ${doneCount(g)}/${needCount(g)}`}</span></div>
+     ${lock?`<p class="muted">${lock}</p>`:''}
+     <div class="tasks">${g.ids.map(id=>{ const st = l[id]?'<span class="state ok">✓ Lokið</span>':started[id]?'<span class="state">Byrjað</span>':'';
+       return lock ? `<div class="task locked" aria-disabled="true"><b>${T[id].title}</b><span>${T[id].sub}</span><span class="state">${LOCK}Læst</span></div>`
+                   : `<button class="task ${l[id]?'is-done':''}" data-go="${id}"><b>${T[id].title}</b><span>${T[id].sub}</span>${st}</button>`;}).join('')}</div></section>`;}).join('')}`;
 }
 function task(id){
-  const t=T[id], i=ORDER.indexOf(id), prev=ORDER[i-1], next=ORDER[i+1], g=GROUPS.find(g=>g.ids.includes(id));
-  return `<header class="top"><button class="brand" data-go="heim">RÁÐGÁTUSTOFAN</button><button class="back" data-go="radgatur">← Öll verkefni</button></header>
-  <article class="sheet"><span class="eyebrow">${g.t.toUpperCase()}</span><h1>${t.title}</h1>${t.render()}</article>
+  const t=T[id], g=groupOf(id), lock=groupLock(g), l=lokid();
+  if(lock) return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()}</span><h1>${t.title}</h1>
+    <p class="lead">${LOCK}Þetta verkefni er læst. ${lock}</p><button class="btn" style="align-self:flex-start" data-go="radgatur">Aftur í yfirlitið</button></article>`;
+  const i=ORDER.indexOf(id), prev=ORDER[i-1], next=ORDER[i+1];
+  return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()} · ${reqText(g).toUpperCase()}</span><h1>${t.title}</h1>${t.render()}
+    <div class="finish"><button class="btn ${l[id]?'is-done':''}" id="finish">${l[id]?'✓ Lokið. Smelltu til að afturkalla':'Ég er búin(n) með verkefnið'}</button>
+    <span class="muted">${g.t}: ${Math.min(doneCount(g),needCount(g))} af ${needCount(g)} lokið</span></div></article>
   <nav class="pager">${prev?`<button class="back" data-go="${prev}">← ${T[prev].title}</button>`:'<span></span>'}${next?`<button class="back" data-go="${next}">${T[next].title} →</button>`:''}</nav>`;
 }
 
 let view = 'radgatur';
 function render(){
-  app.innerHTML = T[view] ? task(view) : news();
-  if(T[view] && T[view].after) T[view].after();
+  const {tot,dn}=totals();
+  const back = T[view] ? '<button class="back" data-go="radgatur">← Öll verkefni</button>' : '<button class="back" data-go="heim">← Forsíða</button>';
+  app.innerHTML = `${header(back)}
+   <div class="layout"><aside class="path" aria-label="Leiðin mín">${pathPanel()}</aside><main class="col">${T[view]?task(view):news()}</main></div>
+   <button class="pathfab ${window.scrollY>120?'show':''}" id="pathfab">Leiðin mín · ${dn}/${tot}</button>
+   <div class="drawer" id="drawer" hidden><div class="drawer-panel" role="dialog" aria-label="Leiðin mín"><button class="back" id="drawclose" style="align-self:flex-start">Loka</button>${pathPanel()}</div></div>`;
+  const fin=document.getElementById('finish');
+  if(fin) fin.onclick=()=>{ const s=lokid(); if(s[view]) delete s[view]; else s[view]=true; S.set('lokid',s); render(); };
+  document.getElementById('pathfab').onclick=()=>{ document.getElementById('drawer').hidden=false; };
+  document.getElementById('drawclose').onclick=()=>{ document.getElementById('drawer').hidden=true; };
+  document.getElementById('drawer').onclick=e=>{ if(e.target.id==='drawer') e.target.hidden=true; };
+  if(T[view] && T[view].after && !groupLock(groupOf(view))) T[view].after();
 }
 function go(v){ if(v==='heim'){ location.href='../'; return; } view=v; render(); window.scrollTo({top:0}); try{ history.replaceState(null,'','#'+v); }catch(e){} }
-app.addEventListener('click', e => { const b=e.target.closest('[data-go]'); if(b){ e.preventDefault(); go(b.dataset.go); } });
+app.addEventListener('click', e => { const b=e.target.closest('[data-go]'); if(b && !b.disabled){ e.preventDefault(); go(b.dataset.go); } });
+window.addEventListener('scroll', () => { const f=document.getElementById('pathfab'); if(f) f.classList.toggle('show', window.scrollY>120); }, {passive:true});
 const h = (location.hash||'').slice(1); if(h==='radgatur' || T[h]) view=h;
 render();
 </script>
