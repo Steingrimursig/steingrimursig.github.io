@@ -6,12 +6,17 @@ Verkefnavefur fyrir 7. bekk. Hver frétt er eitt „mál“ í sinni eigin möpp
 radgatur/
 ├── index.html              forsíðan með möppunum
 ├── css/stofan.css          sameiginlegt útlit fyrir allar síður
+├── mal-02-tunglid/         Mál nr. 2: tunglferðirnar (Orðspor 2, bls. 48–51)
+│   ├── index.html
+│   └── stillingar.js       heimildavinna og að lokum eru læst
 └── mal-01-radgatur/
     ├── index.html          fréttin og öll verkefnin
     └── stillingar.js       hér opnar kennarinn læsta hluta
 ```
 
 ## Að opna læsta hluta
+
+Hvert mál hefur sína eigin `stillingar.js`. Í Máli nr. 2 heita læstu hlutarnir `heimildavinna` og `adlokum`.
 
 Samfélagsfræði og Að lokum eru læst þar til þú opnar þau.
 

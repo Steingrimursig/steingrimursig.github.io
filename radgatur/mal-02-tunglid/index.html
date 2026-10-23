@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fóru menn til tunglsins? · Ráðgátustofan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Special+Elite&display=swap">
+<link rel="stylesheet" href="../css/stofan.css">
+</head>
+<body>
+<div class="wrap wide" id="app"></div>
+<script src="stillingar.js"></script>
+<script>
+/* Lykill fyrir vistun í vafra. Hvert mál þarf sinn eigin lykil. */
+const KEY = 'mal02:';
+const S = {
+  get(k, d){ try{ const v = localStorage.getItem(KEY+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(KEY+k, JSON.stringify(v)); }catch(e){} }
+};
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ARTICLE = 'https://namsefni-ai.mms.is/MMS-IS-68c94ccf28be1?lang=is&page=1';
+
+/* ---------- gögn ---------- */
+const CASE = {
+  eyebrow: 'MÁL NR. 2 · ORÐSPOR 2, 3. KAFLI, BLS. 48–51',
+  title: 'Fóru menn í alvöru til tunglsins?',
+  lead: 'Árið 1969 horfðu milljónir manna á fyrstu mennina stíga á tunglið. Samt er til hópur fólks sem trúir því ekki. Hvernig vitum við hvað er satt? Í þessu máli rannsakar þú tunglferðirnar, samsæriskenningar og leyndardóminn um Area 51.',
+  linkText: 'Orðspor 2 á vef MMS ↗',
+  note: 'Lykiltextinn er í kennslubókinni <b>Orðspor 2</b>, 3. kafla, bls. 48–51. Byrjaðu á verkefnunum <b>fyrir lestur</b> áður en þú lest. Þegar þú klárar verkefni ýtirðu á <em>Ég er búin(n)</em> neðst á síðunni.'
+};
+const BOOK = 'Orðspor 2, bls. 48–51';
+const CORE = [
+ ['kenning','Bls. 51, efst'],['blekkja','Bls. 50, neðst í hægri dálki'],['sviðsetja','Bls. 51, önnur efnisgrein'],
+ ['samsæri','Bls. 51, talblaðran neðst'],['að fyrnast','Bls. 48, fyrsta efnisgreinin undir millifyrirsögninni'],
+ ['geimáætlun','Bls. 48, fyrsta efnisgreinin undir millifyrirsögninni'],['hringsóla','Bls. 48, neðst í vinstri dálki'],
+ ['hremmingar','Bls. 48, neðst í hægri dálki'],['greypa','Bls. 50, efst í hægri dálki'],
+ ['klöngrast','Bls. 50, neðst í vinstri dálki'],['príla','Bls. 50, miðjan í vinstri dálki'],
+ ['framandi','Bls. 50, miðjan í hægri dálki'],['yfirburðir','Bls. 50, miðjan í hægri dálki'],
+ ['útsending','Bls. 50 og bls. 51'],['skilvíslega','Bls. 51, talblaðran efst']
+];
+const IDIOMS = [
+ ['sitja límdur við eitthvað','horfa á eitthvað af svo miklum áhuga að maður getur ekki hætt'],
+ ['fleyg orð','orð sem verða fræg og fólk vitnar oft í'],
+ ['liggja ekki í augum uppi','vera ekki augljóst'],
+ ['mega kallast heppinn','vera í raun mjög heppinn'],
+ ['lenda í hremmingum','lenda í miklum vandræðum eða hættu'],
+ ['eiga metið','hafa gert betur en allir aðrir'],
+ ['í rólegheitunum','án þess að flýta sér'],
+ ['stíga fæti á','koma á staðinn og ganga þar']
+];
+const POS = [['príla',['so']],['kenning',['no']],['heppinn',['lo']],['varlega',['ob']],['blekkja',['so']],
+ ['fjarlægð',['no']],['stoltur',['lo']],['þegar',['ob']],['geimfari',['no']],['líka',['ob','so']]];
+const POSL = {so:'Sagnorð',no:'Nafnorð',lo:'Lýsingarorð',ob:'Óbeygjanlegt'};
+const COMPOUNDS = [['geimáætlun','geim · áætlun'],['tunglferja','tungl · ferja'],['kvikmyndaver','kvik · mynda · ver'],
+ ['sjónvarpsskjár','sjónvarps · skjár'],['upphafshraði','upphafs · hraði'],['umferðartími','umferðar · tími'],
+ ['geimvísindamaður','geim · vísinda · maður'],['reikistjarna','reiki · stjarna'],['mannhæð','mann · hæð'],['Jarðarbúar','Jarðar · búar']];
+const STATEMENTS = ['Menn hafa gengið á tunglinu.','Ef eitthvað stendur í kennslubók er það örugglega rétt.',
+ 'Ef margir trúa einhverju er það líklega satt.','Ljósmynd getur ekki logið.','Geimfarar hafa komið til Íslands til að æfa sig.',
+ 'Það er hægt að sanna að eitthvað hafi gerst fyrir meira en 50 árum.','Leynilegar herstöðvar eru til.'];
+const MYST = ['Tunglferðirnar (bls. 48)','Taflan yfir Apollo-ferðirnar (bls. 49)','Þeir fóru á tunglið … eða hvað? (bls. 50)','Kenningar hópsins (bls. 51)'];
+const SUMLIMIT = 20;
+
+/* ---------- verkefni ---------- */
+const GROUPS = [
+ {key:'fyrir', t:'Fyrir lestur', s:'enn ekki fyrirlestur', need:'all', ids:['hvadveit','fyrirsagnir','fullyrdingar']},
+ {key:'medan', t:'Á meðan lesið er', need:'all', after:['fyrir'], ids:['ordaspor']},
+ {key:'ordafordi', t:'Orðaforði', need:2, after:['medan'], ids:['kjarnaord','frayer','samsett','ordtok','ordflokkar']},
+ {key:'lesskilningur', t:'Lesskilningur', need:2, after:['medan'], ids:['spurningar','taflan','stadreynd','samantekt']},
+ {key:'heimildir', t:'Heimildavinna', need:'all', teacher:'heimildavinna', ids:['heimildaryni','rannsokn','area51','apollohopur']},
+ {key:'lokum', t:'Að lokum', need:'all', teacher:'adlokum', ids:['island','fullyrdingar2','sjalfsmat']}
+];
+const T = {};
+const def = (id, title, sub, render) => T[id] = {id,title,sub,render};
+const nb = (items, head='Í stílabókina') =>
+  `<div class="notebook"><strong>${head}</strong><ol>${items.map(i=>`<li>${i}</li>`).join('')}</ol></div>`;
+const extlink = (url, text) => `<a class="btn ghost" style="text-decoration:none;align-self:flex-start" href="${url}" target="_blank" rel="noopener">${text} ↗</a>`;
+
+/* ---- Fyrir lestur ---- */
+def('hvadveit','Hvað veit ég?','Merktu við 15 orð', () => {
+  const st = S.get('know',{});
+  return `<p class="lead">Áður en þú lest: hversu vel þekkir þú þessi orð? Vertu heiðarleg(ur). Þú merkir aftur í lokin og sérð hvað þú hefur lært.</p>
+  ${nb(['Skrifaðu fyrirsögnina <em>Hvað veit ég?</em> og dagsetninguna.','Skrifaðu niður orðin sem þú merkir <em>Veit ekki</em>.'])}
+  <div class="words">${CORE.map(([w])=>`<div class="wordrow"><span class="w">${w}</span><div class="seg" data-w="${w}">
+    ${['Þekki vel','Hef séð það','Veit ekki'].map((l,i)=>`<button aria-pressed="${st[w]===i}" data-i="${i}">${l}</button>`).join('')}</div></div>`).join('')}</div>`;
+});
+T.hvadveit.after = () => app.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const st = S.get('know',{}); st[seg.dataset.w] = +b.dataset.i; S.set('know',st);
+  seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); markDone('hvadveit');
+}));
+
+def('fyrirsagnir','Fyrirsagnir og millifyrirsagnir','Skimaðu áður en þú lest', () => `
+  <p class="lead">Góðir lesendur skoða textann áður en þeir lesa hann. Opnaðu ${BOOK} en lestu <b>ekki</b> meginmálið enn.</p>
+  ${nb(['Skrifaðu niður fyrirsögnina á bls. 48 og fyrirsögnina á bls. 50.',
+   'Önnur fyrirsögnin er hlutlaus en hin vekur efa. Hvor er hvor? Hvaða orð í fyrirsögninni vekja efann?',
+   'Á bls. 48 er millifyrirsögn. Hvert er hlutverk millifyrirsagna í texta?',
+   'Skoðaðu myndina, myndatextann, töfluna, tilvitnunina og talblöðrurnar. Skrifaðu eina setningu um hvað hvert þeirra segir þér um efnið.',
+   'Skrifaðu tvær setningar þar sem þú spáir fyrir um hvað textinn fjallar.'])}
+  <h3>Fyrirsagnasmiðja</h3>
+  <p>Í síðasta máli var fyrirsögnin <em>Óleyst íslensk ráðgáta: Veist þú svarið?</em> Hún vakti forvitni en sagði ekki hvað textinn fjallaði um.</p>
+  ${nb(['Búðu til tvær fyrirsagnir um tunglferðirnar: eina <b>hlutlausa</b> sem segir nákvæmlega um hvað textinn fjallar, og eina sem <b>vekur forvitni</b>.','Hvor fyrirsögnin fengi fleiri til að lesa? Hvor er heiðarlegri gagnvart lesandanum?'],'Í stílabókina')}`);
+
+def('fullyrdingar','Hvað trúir þú?','Taktu afstöðu áður en þú lest', () => { const st=S.get('antic1',{});
+  return `<p class="lead">Ertu sammála eða ósammála þessum fullyrðingum? Það eru engin rétt eða röng svör núna. Í lok málsins skoðar þú hvort skoðun þín hefur breyst.</p>
+  ${nb(['Skrifaðu fullyrðinguna sem þú ert <b>vissust/vissastur</b> um og útskýrðu af hverju í einni setningu.'])}
+  <div class="words">${STATEMENTS.map((s,i)=>`<div class="wordrow"><span class="w" style="font-weight:400">${s}</span><div class="seg" data-a="${i}">
+   ${['Sammála','Ósammála','Veit ekki'].map((l,k)=>`<button aria-pressed="${st[i]===k}" data-k="${k}">${l}</button>`).join('')}</div></div>`).join('')}</div>`;});
+T.fullyrdingar.after = () => app.querySelectorAll('[data-a]').forEach(seg => seg.addEventListener('click', e => {
+  const b=e.target.closest('button'); if(!b) return; const st=S.get('antic1',{}); st[seg.dataset.a]=+b.dataset.k; S.set('antic1',st);
+  seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); markDone('fullyrdingar'); }));
+
+/* ---- Á meðan ---- */
+def('ordaspor','Orðaspor og merkingar','Lestu og merktu', () => `
+  <p class="lead">Lestu ${BOOK}. Þú ert rannsakandi og ókunn orð eru sporin þín. Sum orð eru prentuð með lit í bókinni. Þau eru sérstaklega mikilvæg.</p>
+  ${nb(['Skrifaðu niður hvert orð sem þú skilur ekki.','Við hvert orð: <b>(a)</b> giskaðu á merkinguna, <b>(b)</b> skrifaðu hvaða orð í setningunni hjálpuðu þér að giska.',
+   '<b>(c)</b> Flettu orðinu upp og skrifaðu rétta merkingu. Hittirðu á það?',
+   'Skrifaðu líka niður <b>eina staðreynd</b> og <b>eina fullyrðingu</b> sem þú tekur eftir í textanum.'])}
+  <div class="notebook" style="background:var(--bg)"><strong>Dæmi</strong>
+   <p><b>klöngrast</b>: (a) „fara klaufalega niður“. (b) Buzz er að fara niður stiga í þungum geimbúningi, svo hann fer líklega ekki létt og hratt.</p></div>
+  <div class="row-actions">${extlink('https://snara.is','Snara')}${extlink('https://islenskordabok.arnastofnun.is','Íslensk nútímamálsorðabók')}</div>`);
+
+/* ---- Orðaforði ---- */
+def('kjarnaord','Kjarnaorðin 15','Skrifaðu og útskýrðu', () => `
+  <p class="lead">Þetta eru mikilvægustu orðin í textanum. Þú munt nota þau aftur í heimildavinnunni og blaðagreininni.</p>
+  ${nb(['Skrifaðu hvert orð í stílabókina þína.','Útskýrðu hvað það þýðir <b>með þínum eigin orðum</b>.','Skrifaðu eina setningu þar sem þú notar orðið. Setningin má ekki vera úr bókinni.'])}
+  <p class="muted">Festist þú? Ýttu á <em>Hvar er orðið?</em> og lestu setninguna í bókinni aftur. Sum orð standa í bókinni í annarri mynd, t.d. <em>blekkt</em> eða <em>greypt</em>.</p>
+  <div class="words">${CORE.map(([w,h],i)=>`<div class="wordrow"><span class="w">${i+1}. ${w}</span>
+   <button class="hint" data-h="${i}">Hvar er orðið?</button><span class="hinttext" id="h${i}" hidden>${h}</span></div>`).join('')}</div>`);
+T.kjarnaord.after = () => app.querySelectorAll('.hint').forEach(b => b.onclick = () => { const t=document.getElementById('h'+b.dataset.h); t.hidden=!t.hidden; markDone('kjarnaord'); });
+
+const FW = ['kenning','blekking','samsæri','heimild'];
+const FL = ['Skilgreining með mínum orðum','Dæmi úr textanum','Dæmi úr mínu lífi','Andheiti: orð sem merkir hið gagnstæða'];
+let frayerIdx = 0;
+def('frayer','Frayer-líkanið','Fjögur lykilorð', () => {
+  const w = FW[frayerIdx], st = S.get('frayer',{});
+  return `<p class="lead">Frayer-líkanið hjálpar þér að skilja orð til botns. Fylltu í alla fjóra reitina fyrir hvert orð.</p>
+  ${nb(['Teiknaðu stóran kross á heila síðu og skrifaðu orðið í hring í miðjunni.','Fylltu í reitina fjóra. Þú mátt prófa hér fyrst.','Gerðu þetta fyrir öll fjögur orðin.'])}
+  <div class="frayer-tabs tabs" role="tablist">${FW.map((x,i)=>`<button role="tab" aria-selected="${i===frayerIdx}" data-i="${i}">${x}</button>`).join('')}</div>
+  <div class="frayer">${FL.map((l,i)=>`<div class="cell"><label for="fr${i}">${l}</label><textarea id="fr${i}" data-k="${w}|${i}">${esc(st[w+'|'+i]||'')}</textarea></div>`).join('')}
+   <div class="center">${w}</div></div>
+  <p class="muted">Það sem þú skrifar hér geymist aðeins í þessum vafra.</p>`;
+});
+T.frayer.after = () => {
+  app.querySelectorAll('.frayer-tabs button').forEach(b => b.onclick = () => { frayerIdx=+b.dataset.i; render(); });
+  app.querySelectorAll('.frayer textarea').forEach(t => t.oninput = () => { const st=S.get('frayer',{}); st[t.dataset.k]=t.value; S.set('frayer',st); markDone('frayer'); });
+};
+
+def('samsett','Samsett orð','Brjóttu orðin upp', () => `
+  <p class="lead">Textinn er fullur af löngum samsettum orðum. Ef þú brýtur þau í hluta skilurðu þau oft strax.</p>
+  ${nb(['Skrifaðu hvert orð og skiptu því í hluta með strikum, t.d. <em>tungl-ferja</em>.','Útskýrðu hvern hluta.','Hvaða hluti segir hvað hluturinn ER og hver lýsir honum?','Búðu til þrjú ný samsett orð um geiminn og útskýrðu þau.'])}
+  <div class="words">${COMPOUNDS.map(([w,p],i)=>`<div class="wordrow"><span class="w">${w}</span>
+   <button class="hint" data-h="${i}">Sýna skiptingu</button><span class="hinttext" id="c${i}" hidden>${p}</span></div>`).join('')}</div>
+  <p class="muted">Prófaðu fyrst sjálf(ur) áður en þú skoðar skiptinguna.</p>`);
+T.samsett.after = () => app.querySelectorAll('.hint').forEach(b => b.onclick = () => { const t=document.getElementById('c'+b.dataset.h); t.hidden=!t.hidden; markDone('samsett'); });
+
+let mPairs = {}, mSel = null, mOrder = null;
+def('ordtok','Orðasambönd','Paraðu saman', () => {
+  if(!mOrder){ mOrder = IDIOMS.map((_,i)=>i).sort(()=>Math.random()-.5); }
+  return `<p class="lead">Átta orðasambönd úr textanum. Smelltu á orðasamband og svo á merkinguna sem passar.</p>
+  <div class="match">
+   <div class="col"><h3>Orðasamband</h3>${IDIOMS.map((x,i)=>`<button class="chip ${mSel===i?'sel':''} ${mPairs[i]!==undefined?'paired':''}" data-l="${i}">
+     ${mPairs[i]!==undefined?`<span class="tag">${String.fromCharCode(65+mOrder.indexOf(mPairs[i]))}</span>`:''}${x[0]}</button>`).join('')}</div>
+   <div class="col"><h3>Merking</h3>${mOrder.map((j,k)=>`<button class="chip ${Object.values(mPairs).includes(j)?'paired':''}" data-r="${j}"><span class="tag">${String.fromCharCode(65+k)}</span>${IDIOMS[j][1]}</button>`).join('')}</div>
+  </div>
+  <div class="row-actions"><button class="btn" id="mcheck">Athuga</button><button class="btn ghost" id="mreset">Byrja aftur</button><span class="result" id="mres"></span></div>
+  ${nb(['Skrifaðu orðasamböndin átta og merkingu þeirra.','Veldu fjögur og skrifaðu eina setningu um <b>þitt eigið líf</b> með hverju.'])}`;
+});
+T.ordtok.after = () => {
+  app.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { mSel = +b.dataset.l; render(); });
+  app.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    if(mSel===null) return; const j=+b.dataset.r;
+    for(const k in mPairs) if(mPairs[k]===j) delete mPairs[k];
+    mPairs[mSel]=j; mSel=null; render(); });
+  document.getElementById('mreset').onclick = () => { mPairs={}; mSel=null; mOrder=null; render(); };
+  document.getElementById('mcheck').onclick = () => {
+    let ok=0; app.querySelectorAll('[data-l]').forEach(b => { const i=+b.dataset.l;
+      if(mPairs[i]===undefined) return; const good = mPairs[i]===i; if(good) ok++; b.classList.add(good?'ok':'bad'); });
+    document.getElementById('mres').textContent = `${ok} af ${IDIOMS.length} rétt`;
+    if(ok===IDIOMS.length) markDone('ordtok');
+  };
+};
+
+let posAns = {};
+def('ordflokkar','Orðflokkagreining','Flokkaðu tíu orð', () => `
+  <p class="lead">Í hvaða orðflokk fer hvert orð? Veldu einn hnapp fyrir hvert orð og ýttu svo á <em>Athuga</em>.</p>
+  <div class="words sort">${POS.map(([w],i)=>`<div class="wordrow" id="pr${i}"><span class="w">${w}</span><div class="seg" data-i="${i}">
+   ${Object.entries(POSL).map(([k,l])=>`<button data-k="${k}" aria-pressed="${posAns[i]===k}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="pcheck">Athuga</button><span class="result" id="pres"></span></div>
+  ${nb(['Teiknaðu töflu með fjórum dálkum: sagnorð, nafnorð, lýsingarorð og óbeygjanleg orð.','Skrifaðu orðin í réttan dálk.','Aukaspurning: Eitt orðanna getur verið í tveimur orðflokkum. Hvaða orð er það? Skrifaðu setningu með hvorri merkingu.'])}`);
+T.ordflokkar.after = () => {
+  app.querySelectorAll('.sort .seg').forEach(seg => seg.addEventListener('click', e => {
+    const b=e.target.closest('button'); if(!b) return; posAns[seg.dataset.i]=b.dataset.k;
+    seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    document.getElementById('pr'+seg.dataset.i).style.background=''; }));
+  document.getElementById('pcheck').onclick = () => {
+    let ok=0; POS.forEach(([w,a],i)=>{ const row=document.getElementById('pr'+i); if(!posAns[i]){row.style.background='';return;}
+      const g=a.includes(posAns[i]); if(g) ok++; row.style.background = g?'var(--ok-soft)':'var(--bad-soft)'; });
+    document.getElementById('pres').textContent = `${ok} af ${POS.length} rétt` + (ok===POS.length?' — vel gert! Mundu aukaspurninguna.':'');
+    if(ok===POS.length) markDone('ordflokkar');
+  };
+};
+
+/* ---- Lesskilningur ---- */
+const QS = {
+ '1. stig: Svarið stendur í textanum':[
+  'Í hvaða geimáætlun fóru menn til tunglsins og á hvaða árum?',
+  'Hve löng var Satúrnus-eldflaugin og hve mörgum mannhæðum samsvarar það?',
+  'Hve langan tíma tók flugið til tunglsins, bæði í klukkustundum og dögum?',
+  'Geimfararnir á Apollo 13 eiga met. Hvaða met er það og hvað gerðist í ferðinni þeirra?',
+  'Hvaða dag lenti tunglferjan Örninn á tunglinu og hvað sagði Neil Armstrong þegar hann steig niður?',
+  'Hvað skildu geimfararnir á Apollo 11 eftir á tunglinu? Nefndu að minnsta kosti þrennt.',
+  'Til er hópur fólks sem trúir ekki á tunglferðirnar. Hvað heldur hópurinn fram og hvaða tvö atriði nefnir hann sem dæmi?',
+  'Hvers vegna komu geimfarar á vegum NASA til Íslands?'],
+ '2. stig: Lesið á milli línanna':[
+  'Í textanum stendur að tunglferðirnar séu farnar að fyrnast og að fæstir muni lengur hve margar þær voru. Hvers vegna heldur þú að fólk gleymi atburðum sem þóttu stórkostlegir á sínum tíma?',
+  'Höfundur byrjar textann á bls. 50 á því að segja að fólk hafi ekki verið að horfa á Söngvakeppnina eða HM í fótbolta. Hvers vegna byrjar hann svona og hvaða áhrif hefur það á lesandann?',
+  'Höfundur skrifar að allir hafi verið stoltir og svo, í sífellt styttri setningum: „Eða flestir. Allavega margir. Ekki allir.“ Hvers vegna skrifar hann þetta svona? Hvað er hann að undirbúa lesandann fyrir?',
+  'Í textanum stendur að Armstrong hafi stigið á tunglið 20. júlí, en á gulum miða efst á bls. 50 stendur að á Íslandi hafi verið kominn 21. júlí. Hvernig getur hvort tveggja staðist?',
+  'Fyrirsögnin á bls. 50 endar á „… eða hvað?“. Hvað gefur hún í skyn um innihald textans? Svarar höfundur sjálfur spurningunni einhvers staðar?',
+  'Í talblöðru á bls. 51 er spurt hvort svör NASA við samsæriskenningunum séu blekking eða sannleikur. Hvers vegna gæti sumum þótt erfitt að treysta svörum frá NASA? Hvernig væri hægt að athuga málið án þess að treysta bara NASA?'],
+ '3. stig: Handan textans':[
+  'Trúir þú því að menn hafi gengið á tunglinu? Rökstyddu svarið með að minnsta kosti tveimur sönnunum sem þú getur vísað í.',
+  'Mörg þúsund manns unnu við Apollo-áætlunina. Ef ferðirnar hefðu verið sviðsettar hefðu þau öll þurft að þegja í meira en 50 ár. Hvað segir það þér um líkurnar á því að samsæri af þessari stærð haldist leynt?',
+  'Hvers vegna heldur þú að samsæriskenningar verði til og breiðist hratt út á netinu? Nefndu að minnsta kosti tvær ástæður.',
+  'Í bókinni segir að hópurinn tengi tunglferðirnar við kalda stríðið. Kynntu þér hvað kalda stríðið var. Hvers vegna skipti það Bandaríkin miklu máli að verða fyrst til tunglsins?']
+};
+let qTab = 0;
+def('spurningar','Spurningar á þremur stigum','Lesskilningur', () => { const keys=Object.keys(QS);
+  return `<p class="lead">Byrjaðu á 1. stigi. Þegar þú ert búin(n) ferðu á næsta stig.</p>
+  ${nb(['Skrifaðu númer spurningarinnar og svaraðu í heilum setningum.','Á 2. og 3. stigi: segðu alltaf <b>af hverju</b> þú heldur það sem þú heldur.'])}
+  <div class="tabs" role="tablist">${keys.map((k,i)=>`<button role="tab" aria-selected="${i===qTab}" data-i="${i}">${k.split(':')[0]}</button>`).join('')}</div>
+  <h3>${keys[qTab]}</h3><ol class="q">${QS[keys[qTab]].map(q=>`<li>${q}</li>`).join('')}</ol>`;});
+T.spurningar.after = () => app.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { qTab=+b.dataset.i; markDone('spurningar'); render(); });
+
+const TQ = [
+ ['Hvaða Apollo-ferð tók lengstan tíma í heild?',['17','apollo 17','apolló 17'],'Apolló 17, 12,6 dagar.'],
+ ['Í hve mörgum ferðum lentu menn á tunglinu?',['6','sex'],'Sex ferðum: Apolló 11, 12, 14, 15, 16 og 17.'],
+ ['Hve margir menn hafa gengið á tunglinu samkvæmt töflunni? Teldu stjörnurnar.',['12','tólf'],'Tólf menn, tveir í hverri lendingu.'],
+ ['Í hvaða ferð var hætt við lendingu vegna bilunar?',['13','apollo 13','apolló 13'],'Apolló 13 árið 1970.'],
+ ['Hve margar klukkustundir voru geimfarar Apolló 17 úti á tunglinu?',['22','22,0','22.0'],'22,0 klukkustundir.'],
+ ['Hve oft fór Apolló 11 umhverfis tunglið?',['30','þrjátíu'],'30 umferðir á 2,5 dögum.'],
+ ['Hvaða geimfari er í áhöfn bæði Apolló 8 og Apolló 13?',['james lovell','lovell','jim lovell'],'James Lovell.']
+];
+def('taflan','Lestu úr töflunni','Tölur og staðreyndir', () => { const st=S.get('tafla',{});
+  return `<p class="lead">Á bls. 49 er tafla yfir allar Apolló-ferðirnar sem fóru til tunglsins. Notaðu hana til að svara.</p>
+  <div class="words">${TQ.map(([q],i)=>`<div class="sum"><label for="tq${i}">${i+1}. ${q}</label><input type="text" id="tq${i}" value="${esc(st[i]||'')}" autocomplete="off"><span class="counter" id="tr${i}"></span></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="tcheck">Athuga</button><span class="result" id="tres"></span></div>
+  ${nb(['Neðst á bls. 49 stendur á hverju taflan byggir. Hver er heimildin og hvenær kom hún út?','Hvers vegna skiptir máli að taflan segi frá heimild sinni?','Búðu til tvær eigin spurningar úr töflunni og leyfðu félaga að svara.'])}`;});
+T.taflan.after = () => {
+  TQ.forEach((_,i)=>{ document.getElementById('tq'+i).oninput=e=>{ const st=S.get('tafla',{}); st[i]=e.target.value; S.set('tafla',st); }; });
+  document.getElementById('tcheck').onclick = () => { let ok=0;
+    TQ.forEach(([q,a,ex],i)=>{ const v=document.getElementById('tq'+i).value.trim().toLowerCase().replace(/\.$/,''), r=document.getElementById('tr'+i);
+      if(!v){ r.textContent=''; return; } const g=a.includes(v); if(g) ok++; r.textContent = g?'✓ Rétt. '+ex:'Ekki alveg. Skoðaðu töfluna aftur.'; r.style.color=g?'var(--ok)':'var(--bad)'; });
+    document.getElementById('tres').textContent=`${ok} af ${TQ.length} rétt`; if(ok===TQ.length) markDone('taflan'); };
+};
+
+const FACTS = [
+ ['Apollo 11 lenti á tunglinu 20. júlí 1969.','s','Þetta er hægt að sannreyna í mörgum óháðum heimildum.'],
+ ['Tunglferðirnar voru mest spennandi sjónvarpsefni allra tíma.','k','Orðin „mest spennandi“ sýna mat. Aðrir gætu verið ósammála.'],
+ ['Satúrnus-eldflaugin var 111 metra löng.','s','Mæling sem hægt er að fletta upp.'],
+ ['Lendingin var tekin upp í kvikmyndaveri.','f','Þetta heldur hópurinn fram. Þú rannsakar það í heimildavinnunni.'],
+ ['Geimfarar komu til Íslands til að æfa sig fyrir tunglferðir.','s','Það eru til myndir, skjöl og frásagnir af ferðum þeirra.'],
+ ['Fáninn blaktir af því að það er vindur á tunglinu.','f','Fullyrðing sem stenst ekki. Á tunglinu er hvorki loft né vindur.'],
+ ['Engar stjörnur sjást á ljósmyndunum frá tunglinu.','s','Þetta er rétt! Spurningin er hvað það sannar. Það rannsakar þú seinna.'],
+ ['Fólk ætti ekki að trúa öllu sem það sér í sjónvarpinu.','k','Ráðlegging og skoðun, ekki staðreynd.'],
+ ['Tunglferðirnar voru eingöngu hluti af kalda stríðinu.','f','Kalda stríðið skipti máli, en orðið „eingöngu“ gerir fullyrðinguna miklu stærri.']
+];
+const FL3 = {s:'Staðreynd',k:'Skoðun',f:'Fullyrðing sem þarf að kanna'};
+let fAns = {};
+def('stadreynd','Staðreynd, skoðun eða fullyrðing?','Flokkaðu níu setningar', () => `
+  <p class="lead">Gagnrýnin hugsun byrjar á því að greina á milli. <b>Staðreynd</b> er hægt að sannreyna. <b>Skoðun</b> er mat einhvers. <b>Fullyrðing sem þarf að kanna</b> er sett fram eins og hún sé sönn, en þú þarft að athuga hana.</p>
+  <div class="words sort">${FACTS.map(([s],i)=>`<div class="wordrow" id="fr${i}"><span class="w" style="font-weight:400;flex:1 1 260px">${s}</span><div class="seg" data-i="${i}">
+   ${Object.entries(FL3).map(([k,l])=>`<button data-k="${k}" aria-pressed="${fAns[i]===k}">${l}</button>`).join('')}</div><span class="hinttext" id="fx${i}" hidden></span></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="fcheck">Athuga</button><span class="result" id="fres"></span></div>
+  ${nb(['Finndu tvö dæmi um staðreynd og eitt dæmi um skoðun í ' + BOOK + '.','Ein setningin hér að ofan er staðreynd en er samt notuð sem „sönnun“ fyrir samsæri. Hvaða setning er það?'])}`);
+T.stadreynd.after = () => {
+  app.querySelectorAll('.sort .seg').forEach(seg => seg.addEventListener('click', e => {
+    const b=e.target.closest('button'); if(!b) return; fAns[seg.dataset.i]=b.dataset.k;
+    seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); }));
+  document.getElementById('fcheck').onclick = () => { let ok=0;
+    FACTS.forEach(([s,a,ex],i)=>{ const row=document.getElementById('fr'+i), x=document.getElementById('fx'+i); if(!fAns[i]){ return; }
+      const g=fAns[i]===a; if(g) ok++; row.style.background=g?'var(--ok-soft)':'var(--bad-soft)'; x.hidden=false; x.textContent=(g?'':'Rétt svar: '+FL3[a]+'. ')+ex; });
+    document.getElementById('fres').textContent=`${ok} af ${FACTS.length} rétt`; if(ok===FACTS.length) markDone('stadreynd'); };
+};
+
+def('samantekt','Samantekt í 20 orðum','Hver hluti í einni setningu', () => { const st=S.get('sum',{});
+  return `<p class="lead">Dragðu hvern hluta kaflans saman í <b>einni setningu, mest ${SUMLIMIT} orð</b>. Regla: Þú mátt ekki afrita meira en þrjú orð í röð úr bókinni.</p>
+  ${nb(['Skrifaðu setningarnar fjórar í stílabókina þegar þú ert ánægð(ur) með þær.','Lestu þær saman. Segja þær alla söguna? Hverju misstirðu?'])}
+  ${MYST.map((m,i)=>`<div class="sum"><label for="s${i}">${i+1}. ${m}</label><input type="text" id="s${i}" value="${esc(st[i]||'')}"><span class="counter" id="sc${i}"></span></div>`).join('')}`;});
+T.samantekt.after = () => MYST.forEach((_,i)=>{ const inp=document.getElementById('s'+i), c=document.getElementById('sc'+i);
+  const upd=()=>{ const n=inp.value.trim()?inp.value.trim().split(/\s+/).length:0; c.textContent=`${n} / ${SUMLIMIT} orð`; c.classList.toggle('over',n>SUMLIMIT); };
+  upd(); inp.oninput=()=>{ const st=S.get('sum',{}); st[i]=inp.value; S.set('sum',st); upd(); markDone('samantekt'); }; });
+
+/* ---- Heimildavinna ---- */
+const CHECK5 = ['<b>Hver</b> skrifaði þetta? Er höfundurinn nafngreindur og veit hann eitthvað um efnið?','<b>Hvenær</b> var þetta skrifað? Getur eitthvað hafa breyst síðan?',
+ '<b>Hvers vegna</b> var þetta skrifað? Til að upplýsa, skemmta, selja eða sannfæra?','<b>Hvaða sannanir</b> eru nefndar? Er vísað í heimildir?','<b>Segja aðrar heimildir</b> það sama?'];
+const SRC = [
+ ['Svar á Vísindavefnum (Háskóli Íslands) eftir stjörnufræðikennara um fyrstu tungllendinguna, skrifað 2022.','t','Höfundur er nafngreindur og þekkir efnið, vefurinn er á vegum háskóla og svarið er dagsett.'],
+ ['Svar á Vísindavefnum um fánann á tunglinu frá 2001, merkt sem <em>föstudagssvar</em>.','m','Vefurinn er traustur, en föstudagssvör eru skrifuð í léttum tón og að hluta í gríni. Lestu með það í huga.'],
+ ['Myndband á samfélagsmiðli þar sem nafnlaus maður segir að tunglferðirnar hafi verið sviðsettar.','o','Enginn höfundur, engar heimildir og tilgangurinn er oft að fá áhorf.'],
+ ['Myndir NASA af lendingarstöðunum, teknar úr geimfari á braut um tunglið árið 2009.','t','Frumheimild með myndum. Það styrkir málið enn frekar þegar aðrar heimildir segja það sama.'],
+ ['Grein á íslenskum fréttavef sem kynnir hlaðvarpsþátt um fljúgandi furðuhluti.','m','Blanda af staðreyndum og fullyrðingum einstaklinga. Athugaðu alltaf hver segir hvað.'],
+ ['Kennslubókin Orðspor 2.','m','Bókin er traust, en hún er ekki gallalaus. Finnurðu stafsetningarvillu í verkefnarammanum á bls. 49? Taflan byggir líka á bók frá 1994.']
+];
+const SL = {t:'Traust',m:'Lestu með varúð',o:'Ótraust'};
+let sAns = {};
+def('heimildaryni','Heimildarýni','Fimm spurningar um hverja heimild', () => `
+  <p class="lead">Áður en þú notar heimild spyrðu fimm spurninga. Lærðu þær utan að. Þær gilda um bækur, vefsíður, myndbönd og gervigreind.</p>
+  <ol class="q">${CHECK5.map(c=>`<li>${c}</li>`).join('')}</ol>
+  ${nb(['Skrifaðu spurningarnar fimm í stílabókina.'])}
+  <h3>Æfing: Hversu traust er heimildin?</h3>
+  <div class="words sort">${SRC.map(([s],i)=>`<div class="wordrow" id="sr${i}"><span class="w" style="font-weight:400;flex:1 1 260px">${s}</span><div class="seg" data-i="${i}">
+   ${Object.entries(SL).map(([k,l])=>`<button data-k="${k}" aria-pressed="${sAns[i]===k}">${l}</button>`).join('')}</div><span class="hinttext" id="sx${i}" hidden></span></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="scheck">Sýna rökstuðning</button></div>
+  <p class="muted">Hér eru ekki alltaf rétt eða röng svör. Það sem skiptir máli er rökstuðningurinn.</p>`);
+T.heimildaryni.after = () => {
+  app.querySelectorAll('.sort .seg').forEach(seg => seg.addEventListener('click', e => {
+    const b=e.target.closest('button'); if(!b) return; sAns[seg.dataset.i]=b.dataset.k;
+    seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); }));
+  document.getElementById('scheck').onclick = () => { SRC.forEach(([s,a,ex],i)=>{ const x=document.getElementById('sx'+i); x.hidden=false;
+    x.innerHTML=`<b>Okkar mat: ${SL[a]}.</b> ${ex}`; }); markDone('heimildaryni'); };
+};
+
+const CLAIMS = [
+ ['Hver hélt á myndavélinni sem myndaði Armstrong stíga út úr tunglferjunni?','Skoðaðu hvar myndavélin var. Þarf alltaf einhver að halda á myndavél?'],
+ ['Fáninn blaktir þó að það sé hvorki loft né vindur á tunglinu.','Lestu svar Vísindavefsins um fánann. Hvað var fest efst á fánastöngina?'],
+ ['Engar stjörnur sjást á ljósmyndunum.','Prófaðu að taka mynd á síma af björtum ljósastaur að kvöldi. Sjást stjörnurnar á myndinni?'],
+ ['Skuggarnir passa ekki alltaf við stöðu sólarinnar.','Er yfirborð tunglsins slétt? Hvað gerist með skugga á ójöfnu landi?'],
+ ['Hlutirnir sem geimfararnir skildu eftir sjást ekki með góðum sjónaukum frá Jörðu.','Hversu stórir eru hlutirnir og hversu langt er til tunglsins? Leitaðu að myndum úr geimfarinu LRO frá 2009.']
+];
+def('rannsokn','Fullyrðing, skýring, heimild','Rannsakaðu kenningarnar', () => `
+  <p class="lead">Á bls. 51 eru fimm atriði sem hópurinn notar sem „sannanir“. Nú rannsakar þú þau eins og vísindamaður.</p>
+  ${nb(['Teiknaðu töflu með þremur dálkum: <b>Fullyrðing · Skýring · Heimild</b>.','Leitaðu að skýringu á hverri fullyrðingu. Notaðu að minnsta kosti tvær ólíkar heimildir í heildina.','Skrifaðu heimildina við hverja skýringu: hver skrifaði, hvar og hvenær.','Að lokum: Eru einhverjar sannanir fyrir því að menn <b>hafi</b> farið til tunglsins? Nefndu tvær.'])}
+  <div class="words">${CLAIMS.map(([c,h],i)=>`<div class="wordrow"><span class="w" style="font-weight:400;flex:1 1 300px">${i+1}. ${c}</span>
+   <button class="hint" data-h="${i}">Vísbending</button><span class="hinttext" id="k${i}" hidden>${h}</span></div>`).join('')}</div>
+  <h3>Heimildir til að byrja á</h3>
+  <div class="row-actions">${extlink('https://www.visindavefur.is/svar.php?id=1710','Fáninn á tunglinu')}${extlink('https://www.visindavefur.is/svar.php?id=77842','Fyrsta tungllendingin')}${extlink('https://www.visindavefur.is/svar.php?id=3993','Tunglsteinarnir')}</div>
+  <p class="muted">Mundu að svarið um fánann er föstudagssvar. Hvað þýðir það fyrir þig sem lesanda?</p>`);
+T.rannsokn.after = () => app.querySelectorAll('.hint').forEach(b => b.onclick = () => { const t=document.getElementById('k'+b.dataset.h); t.hidden=!t.hidden; markDone('rannsokn'); });
+
+def('area51','Leyndardómurinn um Area 51','Heimildir eldast', () => `
+  <p class="lead">Area 51 er herstöð í eyðimörkinni í Nevada í Bandaríkjunum. Í áratugi vissi enginn hvað fór þar fram og margir trúðu að þar væru geimverur faldar.</p>
+  ${nb(['Lestu svar Vísindavefsins, <em>Er „Area 51“ til?</em> Hvenær var það skrifað og hvað segir það um hvort herinn viðurkenni stöðina?',
+   'Lestu fréttina á Vísi frá 2026. Hvað breyttist árið 2013?',
+   'Heimildirnar segja ekki það sama. Er önnur þeirra röng? Útskýrðu hvers vegna það skiptir máli að athuga <b>hvenær</b> heimild var skrifuð.',
+   'Í fréttinni koma fram bæði staðfest atriði og fullyrðingar einstaklinga. Finndu eitt dæmi um hvort. Hvernig sérðu muninn?',
+   'Hvers vegna heldur þú að leynd í kringum herstöð geti orðið kveikjan að sögum um geimverur?'])}
+  <div class="row-actions">${extlink('https://www.visindavefur.is/svar.php?id=488','Vísindavefurinn (2000)')}${extlink('https://www.visir.is/g/20262881512d/fljugandi-furduhlutir-leyndarhyggja-yfirvalda-og-samsaeriskenningar','Vísir (2026)')}</div>`);
+
+def('apollohopur','Apolló-hópverkefnið','Heimildasöfnun og blaðagrein', () => `
+  <p class="lead">Þetta er verkefnið á bls. 49 í Orðspori 2. Vinnið saman þrjú til fjögur. Hér eru leiðbeiningar um heimildaskrána.</p>
+  <ol class="q"><li>Veljið eina Apolló-ferð úr töflunni.</li><li>Safnið upplýsingum af netinu, úr bókum eða tímaritum. Notið heimildarýnina: fimm spurningar um hverja heimild.</li>
+   <li>Skráið jafnóðum hvar þið finnið upplýsingarnar.</li><li>Gerið hugarkort um ferðina.</li><li>Finnið að minnsta kosti tvær myndir og skráið hvar þið funduð þær.</li>
+   <li>Skrifið blaðagrein, að minnsta kosti fjórar efnisgreinar, með góðri fyrirsögn.</li><li>Lesið yfir stafsetningu og málfar og skilið greininni ásamt heimildaskrá.</li></ol>
+  <div class="notebook"><strong>Svona skráir þú heimild</strong>
+   <p>Höfundur. (Ár). <em>Titill.</em> Vefur eða útgefandi. Slóð</p>
+   <p style="font-size:.92rem">Dæmi: Sævar Helgi Bragason. (2022). <em>Hvernig fór fyrsta tungllendingin fram og hvað gerðu geimfararnir á tunglinu?</em> Vísindavefurinn. https://www.visindavefur.is/svar.php?id=77842</p>
+   <p style="font-size:.92rem">Mynd: Ljósmyndari eða stofnun. <em>Lýsing á myndinni.</em> Vefur. Slóð</p></div>
+  <p class="muted">Ef þið notið gervigreind við leitina skuluð þið athuga upplýsingarnar í annarri heimild og segja frá því í heimildaskránni.</p>`);
+
+/* ---- Að lokum ---- */
+def('island','Ísland og tunglið','Geimfarar og geimverur á Íslandi', () => `
+  <p class="lead">Ísland kemur tvisvar við sögu í þessu máli.</p>
+  <h3>Geimfararnir í Öskju</h3>
+  <p>Árin 1965 og 1967 komu Apolló-geimfarar til Íslands til að æfa jarðfræði. Neil Armstrong var í seinni hópnum. Geimförunum þótti landslagið við Öskju líkast tunglinu af öllum stöðunum þar sem þeir æfðu.</p>
+  <h3>Beðið eftir geimverum á Snæfellsjökli</h3>
+  <p>Þann 5. nóvember 1993 söfnuðust yfir 600 manns saman við Snæfellsjökul. Því hafði verið spáð að geimverur myndu lenda þar klukkan 21:07. Engar geimverur komu.</p>
+  ${nb(['Finndu Öskju og Snæfellsjökul á Íslandskorti og merktu þau.','Hvers vegna heldur þú að landslag á Íslandi líkist tunglinu?','Í máli nr. 1 lærðir þú um danspláguna. Hvað eiga atburðurinn á Snæfellsjökli og dansplágan sameiginlegt?','Ef þú hefðir búið á Snæfellsnesi árið 1993, hefðirðu farið upp að jökli? Af hverju eða af hverju ekki?'])}
+  <div class="row-actions">${extlink('https://www.explorationmuseum.com/astronaut-training/','Könnunarsafnið á Húsavík (á ensku)')}${extlink('https://www.visir.is/g/2013706209966/geimverurnar-lenda-a-snaefellsnesi','Vísir: Geimverurnar lenda á Snæfellsnesi')}</div>`);
+
+def('fullyrdingar2','Hvað trúir þú núna?','Hefur skoðun þín breyst?', () => { const a=S.get('antic1',{}), b=S.get('antic2',{}); const L=['Sammála','Ósammála','Veit ekki'];
+  return `<p class="lead">Taktu aftur afstöðu til sömu fullyrðinga og í byrjun. Fyrra svarið þitt sést undir hverri fullyrðingu.</p>
+  <div class="words">${STATEMENTS.map((s,i)=>`<div class="wordrow"><span class="w" style="font-weight:400;flex:1 1 260px">${s}<small class="muted" style="display:block;font-size:.85rem">Í byrjun: ${a[i]!==undefined?L[a[i]]:'ekki svarað'}</small></span><div class="seg" data-a="${i}">
+   ${L.map((l,k)=>`<button aria-pressed="${b[i]===k}" data-k="${k}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+  ${nb(['Veldu eina fullyrðingu þar sem skoðun þín breyttist, eða styrktist. Útskýrðu hvað í málinu hafði áhrif á þig.','Hvað myndir þú segja við vin sem trúir því að tunglferðirnar hafi verið sviðsettar? Skrifaðu þrjár setningar sem eru kurteisar en byggja á sönnunum.'])}`;});
+T.fullyrdingar2.after = () => app.querySelectorAll('[data-a]').forEach(seg => seg.addEventListener('click', e => {
+  const b=e.target.closest('button'); if(!b) return; const st=S.get('antic2',{}); st[seg.dataset.a]=+b.dataset.k; S.set('antic2',st);
+  seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); markDone('fullyrdingar2'); }));
+
+const SELF = ['Ég get útskýrt orðin kenning, blekking, samsæri og heimild.','Ég get greint á milli staðreyndar, skoðunar og fullyrðingar sem þarf að kanna.',
+ 'Ég kann fimm spurningarnar sem ég spyr um hverja heimild.','Ég get skráð heimild rétt í heimildaskrá.',
+ 'Ég get útskýrt hvers vegna þarf að athuga hvenær heimild var skrifuð.','Ég get nefnt tvær sannanir fyrir því að menn hafi farið til tunglsins.',
+ 'Ég merkti aftur við í „Hvað veit ég?“ og sé hvað ég hef lært.'];
+def('sjalfsmat','Sjálfsmat','Hvað lærði ég?', () => { const st=S.get('self',{});
+  return `<p class="lead">Hakaðu við það sem þú getur núna.</p>
+  <div class="checks">${SELF.map((s,i)=>`<label><input type="checkbox" id="self${i}" ${st[i]?'checked':''}><span>${s}</span></label>`).join('')}</div>
+  ${nb(['Teldu hve mörg orð þú merktir <em>Veit ekki</em> í byrjun en kannt núna. Skrifaðu: <em>Ég kann núna ___ ný orð.</em>','Skrifaðu eina setningu um það sem kom þér mest á óvart.'])}
+  <button class="btn ghost" style="align-self:flex-start" data-go="hvadveit">Opna „Hvað veit ég?“ aftur</button>`;});
+T.sjalfsmat.after = () => { SELF.forEach((_,i)=>document.getElementById('self'+i).onchange=e=>{ const st=S.get('self',{}); st[i]=e.target.checked; S.set('self',st); markDone('sjalfsmat'); }); };
+
+/* ---------- framvinda ---------- */
+const CFG = Object.assign({ heimildavinna:false, adlokum:false, rod:true }, window.STILLINGAR || {});
+function markDone(id){ const d=S.get('done',{}); if(!d[id]){ d[id]=1; S.set('done',d); } }
+const lokid = () => S.get('lokid',{});
+const ORDER = GROUPS.flatMap(g=>g.ids);
+const groupOf = id => GROUPS.find(g=>g.ids.includes(id));
+const needCount = g => g.need==='all' ? g.ids.length : g.need;
+const doneCount = g => { const l=lokid(); return g.ids.filter(id=>l[id]).length; };
+const complete = g => doneCount(g) >= needCount(g);
+function groupLock(g){
+  if(g.teacher && !CFG[g.teacher]) return 'Kennarinn opnar þennan hluta síðar.';
+  if(CFG.rod && g.after){ const missing=g.after.map(k=>GROUPS.find(x=>x.key===k)).filter(x=>!complete(x));
+    if(missing.length) return 'Kláraðu fyrst: ' + missing.map(x=>x.t.toLowerCase()).join(' og ') + '.'; }
+  return null;
+}
+const NUM = {2:'tvö',4:'fjórum',5:'fimm'};
+function reqText(g){
+  if(g.need==='all') return g.ids.length===1 ? 'Skylduverkefni' : g.ids.length===2 ? 'Gerðu bæði' : 'Gerðu öll';
+  return `Veldu ${NUM[g.need]} af ${NUM[g.ids.length]}`;
+}
+function totals(){ return GROUPS.reduce((a,g)=>({tot:a.tot+needCount(g), dn:a.dn+Math.min(doneCount(g),needCount(g))}),{tot:0,dn:0}); }
+const LOCK = '<svg class="lockico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+/* ---------- leiðin mín (hliðarstika) ---------- */
+function pathPanel(){
+  const {tot,dn}=totals(), l=lokid();
+  return `<div class="path-head"><span class="eyebrow">LEIÐIN MÍN</span>
+    <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${dn}"><span style="width:${tot?dn/tot*100:0}%"></span></div>
+    <small>${dn} af ${tot} verkefnum lokið</small></div>
+  <button class="pl home ${view==='radgatur'?'cur':''}" data-go="radgatur"><span class="st">i</span>Lykiltextinn og yfirlit</button>
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<div class="pg ${lock?'locked':''} ${c?'complete':''}">
+      <div class="pg-h"><b>${g.t}</b><span>${lock?LOCK+'Læst':c?'✓ Lokið':`${doneCount(g)} / ${needCount(g)}`}</span></div>
+      <p class="pg-note">${lock || reqText(g)}</p>
+      <ul>${g.ids.map(id=>`<li><button class="pl ${id===view?'cur':''} ${l[id]?'done':''}" data-go="${id}" ${lock?'disabled':''}><span class="st">${l[id]?'✓':''}</span>${T[id].title}</button></li>`).join('')}</ul>
+    </div>`;}).join('')}`;
+}
+
+/* ---------- síður ---------- */
+function header(back){
+  return `<header class="top"><button class="brand" data-go="heim">RÁÐGÁTUSTOFAN</button>${back}</header>`;
+}
+function news(){
+  const l=lokid(), started=S.get('done',{});
+  return `<article class="sheet">
+   <span class="eyebrow">${CASE.eyebrow}</span>
+   <h1>${CASE.title}</h1>
+   <p class="lead">${CASE.lead}</p>
+   <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">${CASE.linkText}</a>
+   <p class="muted">${CASE.note}</p>
+  </article>
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<section class="group"><div class="group-title"><h2>${g.t}</h2>${g.s?`<small>(${g.s})</small>`:''}
+      <span class="req ${lock?'is-locked':c?'is-done':''}">${lock?LOCK+'Læst':c?'✓ Lokið':`${reqText(g)} · ${doneCount(g)}/${needCount(g)}`}</span></div>
+     ${lock?`<p class="muted">${lock}</p>`:''}
+     <div class="tasks">${g.ids.map(id=>{ const st = l[id]?'<span class="state ok">✓ Lokið</span>':started[id]?'<span class="state">Byrjað</span>':'';
+       return lock ? `<div class="task locked" aria-disabled="true"><b>${T[id].title}</b><span>${T[id].sub}</span><span class="state">${LOCK}Læst</span></div>`
+                   : `<button class="task ${l[id]?'is-done':''}" data-go="${id}"><b>${T[id].title}</b><span>${T[id].sub}</span>${st}</button>`;}).join('')}</div></section>`;}).join('')}`;
+}
+function task(id){
+  const t=T[id], g=groupOf(id), lock=groupLock(g), l=lokid();
+  if(lock) return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()}</span><h1>${t.title}</h1>
+    <p class="lead">${LOCK}Þetta verkefni er læst. ${lock}</p><button class="btn" style="align-self:flex-start" data-go="radgatur">Aftur í yfirlitið</button></article>`;
+  const i=ORDER.indexOf(id), prev=ORDER[i-1], next=ORDER[i+1];
+  return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()} · ${reqText(g).toUpperCase()}</span><h1>${t.title}</h1>${t.render()}
+    <div class="finish"><button class="btn ${l[id]?'is-done':''}" id="finish">${l[id]?'✓ Lokið. Smelltu til að afturkalla':'Ég er búin(n) með verkefnið'}</button>
+    <span class="muted">${g.t}: ${Math.min(doneCount(g),needCount(g))} af ${needCount(g)} lokið</span></div></article>
+  <nav class="pager">${prev?`<button class="back" data-go="${prev}">← ${T[prev].title}</button>`:'<span></span>'}${next?`<button class="back" data-go="${next}">${T[next].title} →</button>`:''}</nav>`;
+}
+
+let view = 'radgatur';
+function render(){
+  const {tot,dn}=totals();
+  const back = T[view] ? '<button class="back" data-go="radgatur">← Öll verkefni</button>' : '<button class="back" data-go="heim">← Forsíða</button>';
+  app.innerHTML = `${header(back)}
+   <div class="layout"><aside class="path" aria-label="Leiðin mín">${pathPanel()}</aside><main class="col">${T[view]?task(view):news()}</main></div>
+   <button class="pathfab ${window.scrollY>120?'show':''}" id="pathfab">Leiðin mín · ${dn}/${tot}</button>
+   <div class="drawer" id="drawer" hidden><div class="drawer-panel" role="dialog" aria-label="Leiðin mín"><button class="back" id="drawclose" style="align-self:flex-start">Loka</button>${pathPanel()}</div></div>`;
+  const fin=document.getElementById('finish');
+  if(fin) fin.onclick=()=>{ const s=lokid(); if(s[view]) delete s[view]; else s[view]=true; S.set('lokid',s); render(); };
+  document.getElementById('pathfab').onclick=()=>{ document.getElementById('drawer').hidden=false; };
+  document.getElementById('drawclose').onclick=()=>{ document.getElementById('drawer').hidden=true; };
+  document.getElementById('drawer').onclick=e=>{ if(e.target.id==='drawer') e.target.hidden=true; };
+  if(T[view] && T[view].after && !groupLock(groupOf(view))) T[view].after();
+}
+function go(v){ if(v==='heim'){ location.href='../'; return; } view=v; render(); window.scrollTo({top:0}); try{ history.replaceState(null,'','#'+v); }catch(e){} }
+app.addEventListener('click', e => { const b=e.target.closest('[data-go]'); if(b && !b.disabled){ e.preventDefault(); go(b.dataset.go); } });
+window.addEventListener('scroll', () => { const f=document.getElementById('pathfab'); if(f) f.classList.toggle('show', window.scrollY>120); }, {passive:true});
+const h = (location.hash||'').slice(1); if(h==='radgatur' || T[h]) view=h;
+render();
+</script>
+</body>
+</html>
