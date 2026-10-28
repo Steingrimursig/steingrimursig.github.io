@@ -32,6 +32,7 @@ const CORE = [
  ['grundvöllur','Ráðgáta 4, Satoshi Nakamoto'],['léttvægur','Ráðgáta 3, hádegismaturinn'],
  ['svigrúm','Ráðgáta 7, lokin'],['ráðstöfun','Ráðgáta 1, dansplágan'],['samtíð','Ráðgáta 1, dansplágan']
 ];
+const DEFS = {"ráðgáta": "Eitthvað sem enginn hefur getað skýrt eða leyst.", "afskekktur": "Langt frá öðrum byggðum og erfitt að komast þangað.", "sporlaust": "Án þess að skilja eftir sig nokkur ummerki.", "dularfullur": "Undarlegur og erfitt að skilja eða útskýra.", "örvænta": "Missa alla von.", "gagnstæður": "Alveg öfugur, andstæður.", "kenning": "Hugmynd sem reynir að útskýra eitthvað en hefur ekki endilega verið sönnuð.", "vísbending": "Eitthvað sem gefur til kynna hvað sé satt eða hvað hafi gerst.", "haldbær": "Traustur, sem hægt er að treysta á.", "dulnefni": "Nafn sem einhver notar í stað síns rétta nafns.", "grundvöllur": "Undirstaða, það sem eitthvað byggir á.", "léttvægur": "Lítils virði, skiptir litlu máli.", "svigrúm": "Pláss eða rými til að gera eitthvað.", "ráðstöfun": "Aðgerð sem gripið er til til að leysa vanda.", "samtíð": "Sá tími sem fólk lifir á."};
 const IDIOMS = [
  ['koma að tómum kofanum','finna ekkert þar sem maður leitaði'],
  ['skjóta upp kollinum','birtast aftur, oft óvænt'],
@@ -76,24 +77,74 @@ const def = (id, title, sub, render) => T[id] = {id,title,sub,render};
 const nb = (items, head='Í stílabókina') =>
   `<div class="notebook"><strong>${head}</strong><ol>${items.map(i=>`<li>${i}</li>`).join('')}</ol></div>`;
 
-def('hvadveit','Hvað veit ég?','Merktu við 15 orð', () => {
+let hvTab = 0, qzWords = null, qzOrder = null, qzPairs = {}, qzSel = null, qzChecked = false;
+function qzNew(){ const l = S.get('quiz',{}); const pool = CORE.map(([w])=>w);
+  const fresh = pool.filter(w=>!l[w]).sort(()=>Math.random()-.5), old = pool.filter(w=>l[w]).sort(()=>Math.random()-.5);
+  qzWords = [...fresh, ...old].slice(0,5); qzOrder = qzWords.map((_,i)=>i).sort(()=>Math.random()-.5); qzPairs = {}; qzSel = null; qzChecked = false; }
+def('hvadveit','Hvað veit ég?','Skoðaðu orðin og prófaðu þig', () => {
   const st = S.get('know',{});
-  return `<p class="lead">Áður en þú lest: hversu vel þekkir þú þessi orð? Vertu heiðarleg(ur). Þú merkir aftur í lokin og sérð hvað þú hefur lært.</p>
-  ${nb(['Skrifaðu fyrirsögnina <em>Hvað veit ég?</em> og dagsetninguna.','Skrifaðu niður orðin sem þú merkir <em>Veit ekki</em>.'])}
-  <div class="words">${CORE.map(([w])=>`<div class="wordrow"><span class="w">${w}</span><div class="seg" data-w="${w}">
-    ${['Þekki vel','Hef séð það','Veit ekki'].map((l,i)=>`<button aria-pressed="${st[w]===i}" data-i="${i}">${l}</button>`).join('')}</div></div>`).join('')}</div>`;
-}, );
-T.hvadveit.after = () => app.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  const st = S.get('know',{}); st[seg.dataset.w] = +b.dataset.i; S.set('know',st);
-  seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); markDone('hvadveit');
-}));
+  const tabs = `<div class="tabs" role="tablist"><button role="tab" aria-selected="${hvTab===0}" data-hv="0">1. Skoðaðu orðin</button><button role="tab" aria-selected="${hvTab===1}" data-hv="1">2. Prófaðu þig</button></div>`;
+  if(hvTab===0) return `<p class="lead">Áður en þú lest: hversu vel þekkir þú þessi orð? Merktu við og ýttu svo á <em>Sýna merkingu</em> til að sjá hvað orðið þýðir.</p>
+  <div class="notebook"><strong>Þú þarft ekki að skrifa neitt</strong><p>Lestu merkingu hvers orðs vel. Þegar þú ert tilbúin(n) ferðu í <em>Prófaðu þig</em> og tengir saman orð og merkingu.</p></div>
+  ${tabs}
+  <div class="row-actions"><button class="btn ghost" id="showall">Sýna allar merkingar</button></div>
+  <div class="words">${CORE.map(([w],i)=>`<div class="wordrow"><span class="w">${w}</span><div class="seg" data-w="${w}">
+    ${['Þekki vel','Hef séð það','Veit ekki'].map((l,k)=>`<button aria-pressed="${st[w]===k}" data-i="${k}">${l}</button>`).join('')}</div>
+    <button class="hint" data-d="${i}">Sýna merkingu</button><span class="hinttext" id="d${i}" hidden>${DEFS[w]}</span></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" data-hv="1">Ég er tilbúin(n) í prófið →</button></div>`;
+  if(!qzWords) qzNew();
+  const learned = S.get('quiz',{}), n = CORE.filter(([w])=>learned[w]).length;
+  return `<p class="lead">Smelltu á orð og svo á merkinguna sem passar. Fimm orð eru í hverri umferð. Orð sem þú hefur ekki enn fengið rétt koma fyrst.</p>
+  ${tabs}
+  <div class="path-head"><div class="meter"><span style="width:${n/CORE.length*100}%"></span></div><small>${n} af ${CORE.length} orðum rétt</small></div>
+  <div class="match">
+   <div class="col"><h3>Orð</h3>${qzWords.map((w,i)=>`<button class="chip ${qzSel===i?'sel':''} ${qzPairs[i]!==undefined?'paired':''}" data-ql="${i}" ${qzChecked?'disabled':''}>
+     ${qzPairs[i]!==undefined?`<span class="tag">${String.fromCharCode(65+qzOrder.indexOf(qzPairs[i]))}</span>`:''}${w}</button>`).join('')}</div>
+   <div class="col"><h3>Merking</h3>${qzOrder.map((j,k)=>`<button class="chip ${Object.values(qzPairs).includes(j)?'paired':''}" data-qr="${j}" ${qzChecked?'disabled':''}><span class="tag">${String.fromCharCode(65+k)}</span>${DEFS[qzWords[j]]}</button>`).join('')}</div>
+  </div>
+  <div class="row-actions">${qzChecked?'<button class="btn" id="qznext">Næsta umferð →</button>':'<button class="btn" id="qzcheck">Athuga</button><button class="btn ghost" id="qzreset">Byrja umferðina aftur</button>'}<span class="result" id="qzres"></span></div>
+  ${n===CORE.length?'<p class="result" style="color:var(--ok)">Vel gert! Þú hefur fengið öll orðin rétt. Ýttu á <em>Ég er búin(n)</em> hér fyrir neðan.</p>':''}`;
+});
+T.hvadveit.after = () => {
+  app.querySelectorAll('[data-hv]').forEach(b => b.onclick = () => { hvTab = +b.dataset.hv; render(); });
+  if(hvTab===0){
+    app.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+      const b = e.target.closest('button'); if(!b) return;
+      const st = S.get('know',{}); st[seg.dataset.w] = +b.dataset.i; S.set('know',st);
+      seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); markDone('hvadveit');
+    }));
+    app.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const t=document.getElementById('d'+b.dataset.d); t.hidden=!t.hidden; b.textContent=t.hidden?'Sýna merkingu':'Fela merkingu'; markDone('hvadveit'); });
+    document.getElementById('showall').onclick = e => { const open = e.target.dataset.open!=='1';
+      app.querySelectorAll('[data-d]').forEach(b => { document.getElementById('d'+b.dataset.d).hidden=!open; b.textContent=open?'Fela merkingu':'Sýna merkingu'; });
+      e.target.dataset.open = open?'1':''; e.target.textContent = open?'Fela allar merkingar':'Sýna allar merkingar'; markDone('hvadveit'); };
+    return;
+  }
+  app.querySelectorAll('[data-ql]').forEach(b => b.onclick = () => { qzSel = +b.dataset.ql; render(); });
+  app.querySelectorAll('[data-qr]').forEach(b => b.onclick = () => { if(qzSel===null) return; const j=+b.dataset.qr;
+    for(const k in qzPairs) if(qzPairs[k]===j) delete qzPairs[k]; qzPairs[qzSel]=j; qzSel=null; render(); });
+  const nx = document.getElementById('qznext'); if(nx) nx.onclick = () => { qzNew(); render(); };
+  const rs = document.getElementById('qzreset'); if(rs) rs.onclick = () => { qzPairs={}; qzSel=null; render(); };
+  const ck = document.getElementById('qzcheck');
+  if(ck) ck.onclick = () => {
+    if(Object.keys(qzPairs).length < qzWords.length){ document.getElementById('qzres').textContent='Paraðu öll fimm orðin fyrst.'; return; }
+    const l = S.get('quiz',{}); let ok=0;
+    qzWords.forEach((w,i)=>{ if(qzPairs[i]===i){ ok++; l[w]=1; } });
+    S.set('quiz',l); qzChecked = true; markDone('hvadveit'); render();
+    app.querySelectorAll('[data-ql]').forEach(b => { const i=+b.dataset.ql; b.classList.add(qzPairs[i]===i?'ok':'bad'); });
+    document.getElementById('qzres').textContent = `${ok} af ${qzWords.length} rétt`;
+  };
+};
 
-def('ordaspa','Orðaspá og skimun','Spáðu áður en þú lest', () => `
-  <p class="lead">Þessi sex orð koma öll fyrir í textanum. Hvað heldur þú að hann fjalli um?</p>
+def('ordaspa','Orðaspá og skimun','Spáið saman áður en þið lesið', () => `
+  <p class="lead">Þessi sex orð koma öll fyrir í textanum. Finndu þér félaga og spáið saman fyrir um hvað textinn fjallar.</p>
   <p style="font-family:var(--f-display);font-size:1.4rem;font-weight:800;display:flex;gap:10px 18px;flex-wrap:wrap">
    ${['ráðgáta','sporlaust','dulnefni','vísbending','hulduefni','kenning'].map(w=>`<span>${w}</span>`).join('')}</p>
-  ${nb(['Skrifaðu tvær setningar með spánni þinni. Vinnið í pörum.','Opnaðu fréttina og lestu <b>aðeins</b> fyrirsögnina og millifyrirsagnirnar sjö. Breyttist spáin?','Textinn er í flokknum <em>Lífið</em> og höfundurinn skrifar vikulega pistla. Hvað segir það þér um tilgang textans? Skrifaðu eina setningu.'])}
+  <div class="notebook"><strong>Ræðið saman</strong><ol>
+   <li>Lesið orðin sex. Hvað haldið þið að textinn fjalli um? Komið ykkur saman um eina spá.</li>
+   <li>Opnið fréttina og lesið <b>aðeins</b> fyrirsögnina og millifyrirsagnirnar sjö. Breytist spáin ykkar?</li>
+   <li>Textinn er í flokknum <em>Lífið</em> og höfundurinn skrifar vikulega pistla. Hvað segir það ykkur um tilgang textans? Er hann skrifaður til að fræða, skemmta eða hvort tveggja?</li>
+   <li>Segið öðru pari frá spánni ykkar. Spáðu þau því sama?</li></ol>
+   <p>Þið þurfið ekki að skrifa neitt. Munið bara spána ykkar.</p></div>
   <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">Opna fréttina á Vísi ↗</a>
   <p class="muted">Eftir lesturinn berið þið spána saman við textann. Hittuð þið á það?</p>`);
 
