@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Draugaskipið Jamestown · Ráðgátustofan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Special+Elite&display=swap">
+<link rel="stylesheet" href="../css/stofan.css">
+</head>
+<body>
+<div class="wrap wide" id="app"></div>
+<script src="stillingar.js"></script>
+<script>
+/* Lykill fyrir vistun í vafra. Hvert mál þarf sinn eigin lykil. */
+const KEY = 'mal03:';
+const S = {
+  get(k, d){ try{ const v = localStorage.getItem(KEY+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(KEY+k, JSON.stringify(v)); }catch(e){} }
+};
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ARTICLE = 'https://www.ruv.is/frettir/menning-og-daegurmal/2020-08-09-morg-hus-a-islandi-smidud-ur-mannlausu-draugaskipi';
+
+/* ---------- gögn ---------- */
+const CASE = {
+  eyebrow: 'MÁL NR. 3 · FRÉTT Á RÚV.IS, 9. ÁGÚST 2020',
+  title: 'Mörg hús á Íslandi smíðuð úr mannlausu draugaskipi',
+  lead: 'Árið 1881 rak stórt seglskip á land í Höfnum á Reykjanesskaga. Enginn var um borð. Hvað varð um áhöfnina, hvernig komst skipið alla leið til Íslands og hvert fór allt timbrið?',
+  linkText: 'Lesa fréttina á RÚV ↗',
+  note: 'Byrjaðu á verkefnunum <b>fyrir lestur</b> áður en þú opnar fréttina. Þegar þú klárar verkefni ýtirðu á <em>Ég er búin(n)</em> neðst á síðunni.'
+};
+const CORE = [
+ ['strand','Í inngangnum efst og í kaflanum „Guð var í vinnu“'],
+ ['aftakaveður','Fyrsta efnisgreinin á eftir inngangnum'],
+ ['gæfa','Fyrsta efnisgreinin á eftir inngangnum'],
+ ['smekkfullur','Fyrsta efnisgreinin á eftir inngangnum'],
+ ['brúklegur','Fyrsta efnisgreinin á eftir inngangnum'],
+ ['drekkhlaðinn','Kaflinn „Þetta er guðsgjöf, allt þetta timbur“'],
+ ['farmur','Kaflinn „Þetta er guðsgjöf, allt þetta timbur“'],
+ ['óviðri','Kaflinn „Þetta er guðsgjöf, allt þetta timbur“'],
+ ['eigra','Kaflinn „Þetta er guðsgjöf, allt þetta timbur“'],
+ ['mölbrotna','Kaflinn „Þetta er guðsgjöf, allt þetta timbur“'],
+ ['sneypuför','Í inngangnum efst og í kaflanum „Dóttir skipstjórans með í för“'],
+ ['örlög','Kaflinn um predikunarstólinn'],
+ ['kortleggja','Kaflinn um predikunarstólinn'],
+ ['áreiðanlegur','Kaflinn „Guð var í vinnu“'],
+ ['yfirnáttúrulegur','Kaflinn „Guð var í vinnu“']
+];
+const DEFS = {
+ 'strand':'Þegar skip rekur á land eða steytir á skeri og losnar ekki.',
+ 'aftakaveður':'Ofsalega vont veður.',
+ 'gæfa':'Heppni eða lán.',
+ 'smekkfullur':'Alveg fullur, svo ekkert meira kemst fyrir.',
+ 'brúklegur':'Sem hægt er að nota, nothæfur.',
+ 'drekkhlaðinn':'Hlaðinn svo miklu að hann ber varla meira.',
+ 'farmur':'Það sem skip, bíll eða flugvél flytur á milli staða.',
+ 'óviðri':'Vont veður, stormur.',
+ 'eigra':'Ráfa um án þess að hafa neina ákveðna stefnu.',
+ 'mölbrotna':'Brotna í marga litla búta.',
+ 'sneypuför':'Ferð sem fer illa og endar með vonbrigðum eða skömm.',
+ 'örlög':'Það sem verður um einhvern eða eitthvað, hvernig fer að lokum.',
+ 'kortleggja':'Finna og skrá nákvæmlega hvar eitthvað er.',
+ 'áreiðanlegur':'Sem hægt er að treysta.',
+ 'yfirnáttúrulegur':'Sem ekki er hægt að útskýra með lögmálum náttúrunnar.'
+};
+const IDIOMS = [
+ ['bjarga við illan leik','bjarga með miklum erfiðismunum, rétt naumlega'],
+ ['reka á fjörur','berast upp á ströndina með sjónum'],
+ ['nýta til agna','nota allt, svo ekkert fer til spillis'],
+ ['mánuðum saman','í marga mánuði'],
+ ['með þeim afleiðingum að','sem varð til þess að'],
+ ['standa í ströngu','hafa mikið að gera við erfitt verkefni'],
+ ['taka verkefnið lengra','halda áfram með verkefnið og gera enn meira'],
+ ['koma hlutunum í farveg','koma málum í rétta átt eða gott horf']
+];
+const POS = [['reka',['so']],['skipstjóri',['no']],['mannlaus',['lo']],['loks',['ob']],['bjarga',['so']],
+ ['timbur',['no']],['voldugur',['lo']],['tvisvar',['ob']],['akkeri',['no']],['á',['ob','no']]];
+const POSL = {so:'Sagnorð',no:'Nafnorð',lo:'Lýsingarorð',ob:'Óbeygjanlegt'};
+const COMPOUNDS = [['draugaskip','drauga · skip'],['seglskip','segl · skip'],['járnbrautarteinar','járn · brautar · teinar'],
+ ['harðviður','harð · viður'],['predikunarstóll','predikunar · stóll'],['áhugamannafélag','áhuga · manna · félag'],
+ ['byggðasafn','byggða · safn'],['koparskjöldur','kopar · skjöldur'],['seglvinda','segl · vinda'],['brúargólf','brúar · gólf']];
+const SECTIONS = ['Inngangurinn og fyrsta efnisgreinin','„Þetta er guðsgjöf, allt þetta timbur“','„Dóttir skipstjórans með í för“','„Svíta skipstjórans varð predikunarstóll …“','„Guð var í vinnu“'];
+const SUMLIMIT = 15;
+
+/* ---------- verkefni ---------- */
+const GROUPS = [
+ {key:'fyrir', t:'Fyrir lestur', s:'og enn ekki fyrirlestur', need:'all', ids:['hvadveit','ordaspa']},
+ {key:'medan', t:'Á meðan lesið er', need:'all', after:['fyrir'], ids:['ordaspor']},
+ {key:'ordafordi', t:'Orðaforði', need:2, after:['medan'], ids:['kjarnaord','frayer','samsett','ordtok','ordflokkar']},
+ {key:'lesskilningur', t:'Lesskilningur', need:2, after:['medan'], ids:['spurningar','millifyrirsagnir','timalina','samantekt']},
+ {key:'samfelag', t:'Saga og heimildir', need:'all', teacher:'samfelagsfraedi', ids:['heimildaryni','timbur','kort','koparskjoldur']},
+ {key:'lokum', t:'Að lokum', need:'all', teacher:'adlokum', ids:['ritun','sjalfsmat']}
+];
+const T = {};
+const def = (id, title, sub, render) => T[id] = {id,title,sub,render};
+const nb = (items, head='Í stílabókina') =>
+  `<div class="notebook"><strong>${head}</strong><ol>${items.map(i=>`<li>${i}</li>`).join('')}</ol></div>`;
+const extlink = (url, text) => `<a class="btn ghost" style="text-decoration:none;align-self:flex-start" href="${url}" target="_blank" rel="noopener">${text} ↗</a>`;
+
+let hvTab = 0, qzWords = null, qzOrder = null, qzPairs = {}, qzSel = null, qzChecked = false;
+function qzNew(){ const l = S.get('quiz',{}); const pool = CORE.map(([w])=>w);
+  const fresh = pool.filter(w=>!l[w]).sort(()=>Math.random()-.5), old = pool.filter(w=>l[w]).sort(()=>Math.random()-.5);
+  qzWords = [...fresh, ...old].slice(0,5); qzOrder = qzWords.map((_,i)=>i).sort(()=>Math.random()-.5); qzPairs = {}; qzSel = null; qzChecked = false; }
+def('hvadveit','Hvað veit ég?','Skoðaðu orðin og prófaðu þig', () => {
+  const st = S.get('know',{});
+  const tabs = `<div class="tabs" role="tablist"><button role="tab" aria-selected="${hvTab===0}" data-hv="0">1. Skoðaðu orðin</button><button role="tab" aria-selected="${hvTab===1}" data-hv="1">2. Prófaðu þig</button></div>`;
+  if(hvTab===0) return `<p class="lead">Áður en þú lest: hversu vel þekkir þú þessi orð? Merktu við og ýttu svo á <em>Sýna merkingu</em> til að sjá hvað orðið þýðir.</p>
+  <div class="notebook"><strong>Þú þarft ekki að skrifa neitt</strong><p>Lestu merkingu hvers orðs vel. Þegar þú ert tilbúin(n) ferðu í <em>Prófaðu þig</em> og tengir saman orð og merkingu.</p></div>
+  ${tabs}
+  <div class="row-actions"><button class="btn ghost" id="showall">Sýna allar merkingar</button></div>
+  <div class="words">${CORE.map(([w],i)=>`<div class="wordrow"><span class="w">${w}</span><div class="seg" data-w="${w}">
+    ${['Þekki vel','Hef séð það','Veit ekki'].map((l,k)=>`<button aria-pressed="${st[w]===k}" data-i="${k}">${l}</button>`).join('')}</div>
+    <button class="hint" data-d="${i}">Sýna merkingu</button><span class="hinttext" id="d${i}" hidden>${DEFS[w]}</span></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" data-hv="1">Ég er tilbúin(n) í prófið →</button></div>`;
+  if(!qzWords) qzNew();
+  const learned = S.get('quiz',{}), n = CORE.filter(([w])=>learned[w]).length;
+  return `<p class="lead">Smelltu á orð og svo á merkinguna sem passar. Fimm orð eru í hverri umferð. Orð sem þú hefur ekki enn fengið rétt koma fyrst.</p>
+  ${tabs}
+  <div class="path-head"><div class="meter"><span style="width:${n/CORE.length*100}%"></span></div><small>${n} af ${CORE.length} orðum rétt</small></div>
+  <div class="match">
+   <div class="col"><h3>Orð</h3>${qzWords.map((w,i)=>`<button class="chip ${qzSel===i?'sel':''} ${qzPairs[i]!==undefined?'paired':''}" data-ql="${i}" ${qzChecked?'disabled':''}>
+     ${qzPairs[i]!==undefined?`<span class="tag">${String.fromCharCode(65+qzOrder.indexOf(qzPairs[i]))}</span>`:''}${w}</button>`).join('')}</div>
+   <div class="col"><h3>Merking</h3>${qzOrder.map((j,k)=>`<button class="chip ${Object.values(qzPairs).includes(j)?'paired':''}" data-qr="${j}" ${qzChecked?'disabled':''}><span class="tag">${String.fromCharCode(65+k)}</span>${DEFS[qzWords[j]]}</button>`).join('')}</div>
+  </div>
+  <div class="row-actions">${qzChecked?'<button class="btn" id="qznext">Næsta umferð →</button>':'<button class="btn" id="qzcheck">Athuga</button><button class="btn ghost" id="qzreset">Byrja umferðina aftur</button>'}<span class="result" id="qzres"></span></div>
+  ${n===CORE.length?'<p class="result" style="color:var(--ok)">Vel gert! Þú hefur fengið öll orðin rétt. Ýttu á <em>Ég er búin(n)</em> hér fyrir neðan.</p>':''}`;
+});
+T.hvadveit.after = () => {
+  app.querySelectorAll('[data-hv]').forEach(b => b.onclick = () => { hvTab = +b.dataset.hv; render(); });
+  if(hvTab===0){
+    app.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+      const b = e.target.closest('button'); if(!b) return;
+      const st = S.get('know',{}); st[seg.dataset.w] = +b.dataset.i; S.set('know',st);
+      seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); markDone('hvadveit');
+    }));
+    app.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const t=document.getElementById('d'+b.dataset.d); t.hidden=!t.hidden; b.textContent=t.hidden?'Sýna merkingu':'Fela merkingu'; markDone('hvadveit'); });
+    document.getElementById('showall').onclick = e => { const open = e.target.dataset.open!=='1';
+      app.querySelectorAll('[data-d]').forEach(b => { document.getElementById('d'+b.dataset.d).hidden=!open; b.textContent=open?'Fela merkingu':'Sýna merkingu'; });
+      e.target.dataset.open = open?'1':''; e.target.textContent = open?'Fela allar merkingar':'Sýna allar merkingar'; markDone('hvadveit'); };
+    return;
+  }
+  app.querySelectorAll('[data-ql]').forEach(b => b.onclick = () => { qzSel = +b.dataset.ql; render(); });
+  app.querySelectorAll('[data-qr]').forEach(b => b.onclick = () => { if(qzSel===null) return; const j=+b.dataset.qr;
+    for(const k in qzPairs) if(qzPairs[k]===j) delete qzPairs[k]; qzPairs[qzSel]=j; qzSel=null; render(); });
+  const nx = document.getElementById('qznext'); if(nx) nx.onclick = () => { qzNew(); render(); };
+  const rs = document.getElementById('qzreset'); if(rs) rs.onclick = () => { qzPairs={}; qzSel=null; render(); };
+  const ck = document.getElementById('qzcheck');
+  if(ck) ck.onclick = () => {
+    if(Object.keys(qzPairs).length < qzWords.length){ document.getElementById('qzres').textContent='Paraðu öll fimm orðin fyrst.'; return; }
+    const l = S.get('quiz',{}); let ok=0;
+    qzWords.forEach((w,i)=>{ if(qzPairs[i]===i){ ok++; l[w]=1; } });
+    S.set('quiz',l); qzChecked = true; markDone('hvadveit'); render();
+    app.querySelectorAll('[data-ql]').forEach(b => { const i=+b.dataset.ql; b.classList.add(qzPairs[i]===i?'ok':'bad'); });
+    document.getElementById('qzres').textContent = `${ok} af ${qzWords.length} rétt`;
+  };
+};
+
+/* ---- Fyrir lestur (framhald) ---- */
+def('ordaspa','Orðaspá og skimun','Spáið saman áður en þið lesið', () => `
+  <p class="lead">Þessi sex orð koma öll fyrir í fréttinni. Finndu þér félaga og spáið saman fyrir um hvað hún fjallar.</p>
+  <p style="font-family:var(--f-display);font-size:1.4rem;font-weight:800;display:flex;gap:10px 18px;flex-wrap:wrap">
+   ${['draugaskip','mannlaust','aftakaveður','timbur','skipstjóri','predikunarstóll'].map(w=>`<span>${w}</span>`).join('')}</p>
+  <div class="notebook"><strong>Ræðið saman</strong><ol>
+   <li>Lesið orðin sex. Hvað haldið þið að fréttin fjalli um? Komið ykkur saman um eina spá.</li>
+   <li>Hvað er draugaskip? Getur skip verið mannlaust úti á reginhafi? Hvernig gæti það gerst?</li>
+   <li>Opnið fréttina og lesið <b>aðeins</b> fyrirsögnina og millifyrirsagnirnar fjórar. Breytist spáin ykkar?</li>
+   <li>Tvær millifyrirsagnanna eru innan gæsalappa. Hvað segir það ykkur?</li>
+   <li>Segið öðru pari frá spánni ykkar. Spáðu þau því sama?</li></ol>
+   <p>Þið þurfið ekki að skrifa neitt. Munið bara spána ykkar.</p></div>
+  <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">Opna fréttina á RÚV ↗</a>
+  <p class="muted">Eftir lesturinn berið þið spána saman við fréttina. Hittuð þið á það?</p>`);
+
+/* ---- Á meðan ---- */
+def('ordaspor','Orðaspor','Lestu og rannsakaðu ókunn orð', () => `
+  <p class="lead">Lestu fréttina alla. Þú ert rannsakandi og ókunn orð eru sporin þín.</p>
+  ${nb(['Skrifaðu niður hvert orð sem þú skilur ekki.','Við hvert orð: <b>(a)</b> giskaðu á merkinguna, <b>(b)</b> skrifaðu hvaða orð í setningunni hjálpuðu þér að giska.',
+   '<b>(c)</b> Flettu orðinu upp og skrifaðu rétta merkingu. Hittirðu á það?',
+   'Skrifaðu líka niður öll staðanöfnin sem koma fyrir í fréttinni. Þú notar þau seinna.'])}
+  <div class="notebook" style="background:var(--bg)"><strong>Dæmi</strong>
+   <p><b>smekkfullt</b>: (a) „alveg fullt“. (b) Orðin <em>drekkhlaðið af viði</em> seinna í fréttinni sýna að skipið var fullt af timbri.</p></div>
+  <div class="row-actions"><a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">Opna fréttina ↗</a>${extlink('https://snara.is','Snara')}${extlink('https://islenskordabok.arnastofnun.is','Íslensk nútímamálsorðabók')}</div>`);
+
+/* ---- Orðaforði ---- */
+def('kjarnaord','Kjarnaorðin 15','Skrifaðu og útskýrðu', () => `
+  <p class="lead">Þetta eru mikilvægustu orðin í fréttinni. Þú munt nota þau aftur í heimildavinnunni og ritunarverkefninu.</p>
+  ${nb(['Skrifaðu hvert orð í stílabókina þína.','Útskýrðu hvað það þýðir <b>með þínum eigin orðum</b>.','Skrifaðu eina setningu þar sem þú notar orðið. Setningin má ekki vera úr fréttinni.'])}
+  <p class="muted">Festist þú? Ýttu á <em>Hvar er orðið?</em> og lestu setninguna í fréttinni aftur. Sum orð standa í fréttinni í annarri mynd, t.d. <em>smekkfullt</em> eða <em>mölbrotnar</em>.</p>
+  <div class="words">${CORE.map(([w,h],i)=>`<div class="wordrow"><span class="w">${i+1}. ${w}</span>
+   <button class="hint" data-h="${i}">Hvar er orðið?</button><span class="hinttext" id="h${i}" hidden>${h}</span></div>`).join('')}</div>`);
+T.kjarnaord.after = () => app.querySelectorAll('.hint').forEach(b => b.onclick = () => { const t=document.getElementById('h'+b.dataset.h); t.hidden=!t.hidden; markDone('kjarnaord'); });
+
+const FW = ['gæfa','mannlaus','brúklegur','áreiðanlegur'];
+const FL = ['Skilgreining með mínum orðum','Dæmi úr textanum','Dæmi úr mínu lífi','Andheiti: orð sem merkir hið gagnstæða'];
+let frayerIdx = 0;
+def('frayer','Frayer-líkanið','Fjögur lykilorð', () => {
+  const w = FW[frayerIdx], st = S.get('frayer',{});
+  return `<p class="lead">Frayer-líkanið hjálpar þér að skilja orð til botns. Fylltu í alla fjóra reitina fyrir hvert orð.</p>
+  ${nb(['Teiknaðu stóran kross á heila síðu og skrifaðu orðið í hring í miðjunni.','Fylltu í reitina fjóra. Þú mátt prófa hér fyrst.','Gerðu þetta fyrir öll fjögur orðin.'])}
+  <div class="frayer-tabs tabs" role="tablist">${FW.map((x,i)=>`<button role="tab" aria-selected="${i===frayerIdx}" data-i="${i}">${x}</button>`).join('')}</div>
+  <div class="frayer">${FL.map((l,i)=>`<div class="cell"><label for="fr${i}">${l}</label><textarea id="fr${i}" data-k="${w}|${i}">${esc(st[w+'|'+i]||'')}</textarea></div>`).join('')}
+   <div class="center">${w}</div></div>
+  <p class="muted">Það sem þú skrifar hér geymist aðeins í þessum vafra.</p>`;
+});
+T.frayer.after = () => {
+  app.querySelectorAll('.frayer-tabs button').forEach(b => b.onclick = () => { frayerIdx=+b.dataset.i; render(); });
+  app.querySelectorAll('.frayer textarea').forEach(t => t.oninput = () => { const st=S.get('frayer',{}); st[t.dataset.k]=t.value; S.set('frayer',st); markDone('frayer'); });
+};
+
+def('samsett','Samsett orð','Brjóttu orðin upp', () => `
+  <p class="lead">Fréttin er full af löngum samsettum orðum. Ef þú brýtur þau í hluta skilurðu þau oft strax.</p>
+  ${nb(['Skrifaðu hvert orð og skiptu því í hluta með strikum, t.d. <em>segl-skip</em>.','Útskýrðu hvern hluta.','Hvaða hluti segir hvað hluturinn ER og hver lýsir honum?','Búðu til þrjú ný samsett orð um skip eða sjóinn og útskýrðu þau.'])}
+  <div class="words">${COMPOUNDS.map(([w,p],i)=>`<div class="wordrow"><span class="w">${w}</span>
+   <button class="hint" data-h="${i}">Sýna skiptingu</button><span class="hinttext" id="c${i}" hidden>${p}</span></div>`).join('')}</div>
+  <p class="muted">Prófaðu fyrst sjálf(ur) áður en þú skoðar skiptinguna.</p>`);
+T.samsett.after = () => app.querySelectorAll('.hint').forEach(b => b.onclick = () => { const t=document.getElementById('c'+b.dataset.h); t.hidden=!t.hidden; markDone('samsett'); });
+
+let mPairs = {}, mSel = null, mOrder = null;
+def('ordtok','Orðasambönd','Paraðu saman', () => {
+  if(!mOrder){ mOrder = IDIOMS.map((_,i)=>i).sort(()=>Math.random()-.5); }
+  return `<p class="lead">Átta orðasambönd úr textanum. Smelltu á orðasamband og svo á merkinguna sem passar.</p>
+  <div class="match">
+   <div class="col"><h3>Orðasamband</h3>${IDIOMS.map((x,i)=>`<button class="chip ${mSel===i?'sel':''} ${mPairs[i]!==undefined?'paired':''}" data-l="${i}">
+     ${mPairs[i]!==undefined?`<span class="tag">${String.fromCharCode(65+mOrder.indexOf(mPairs[i]))}</span>`:''}${x[0]}</button>`).join('')}</div>
+   <div class="col"><h3>Merking</h3>${mOrder.map((j,k)=>`<button class="chip ${Object.values(mPairs).includes(j)?'paired':''}" data-r="${j}"><span class="tag">${String.fromCharCode(65+k)}</span>${IDIOMS[j][1]}</button>`).join('')}</div>
+  </div>
+  <div class="row-actions"><button class="btn" id="mcheck">Athuga</button><button class="btn ghost" id="mreset">Byrja aftur</button><span class="result" id="mres"></span></div>
+  ${nb(['Skrifaðu orðasamböndin átta og merkingu þeirra.','Veldu fjögur og skrifaðu eina setningu um <b>þitt eigið líf</b> með hverju.'])}`;
+});
+T.ordtok.after = () => {
+  app.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { mSel = +b.dataset.l; render(); });
+  app.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    if(mSel===null) return; const j=+b.dataset.r;
+    for(const k in mPairs) if(mPairs[k]===j) delete mPairs[k];
+    mPairs[mSel]=j; mSel=null; render(); });
+  document.getElementById('mreset').onclick = () => { mPairs={}; mSel=null; mOrder=null; render(); };
+  document.getElementById('mcheck').onclick = () => {
+    let ok=0; app.querySelectorAll('[data-l]').forEach(b => { const i=+b.dataset.l;
+      if(mPairs[i]===undefined) return; const good = mPairs[i]===i; if(good) ok++; b.classList.add(good?'ok':'bad'); });
+    document.getElementById('mres').textContent = `${ok} af ${IDIOMS.length} rétt`;
+    if(ok===IDIOMS.length) markDone('ordtok');
+  };
+};
+let posAns = {};
+def('ordflokkar','Orðflokkagreining','Flokkaðu tíu orð', () => `
+  <p class="lead">Í hvaða orðflokk fer hvert orð? Veldu einn hnapp fyrir hvert orð og ýttu svo á <em>Athuga</em>.</p>
+  <div class="words sort">${POS.map(([w],i)=>`<div class="wordrow" id="pr${i}"><span class="w">${w}</span><div class="seg" data-i="${i}">
+   ${Object.entries(POSL).map(([k,l])=>`<button data-k="${k}" aria-pressed="${posAns[i]===k}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="pcheck">Athuga</button><span class="result" id="pres"></span></div>
+  ${nb(['Teiknaðu töflu með fjórum dálkum: sagnorð, nafnorð, lýsingarorð og óbeygjanleg orð.','Skrifaðu orðin í réttan dálk.','Aukaspurning: Eitt orðanna getur verið í tveimur orðflokkum. Hvaða orð er það? Skrifaðu setningu með hvorri merkingu.'])}`);
+T.ordflokkar.after = () => {
+  app.querySelectorAll('.sort .seg').forEach(seg => seg.addEventListener('click', e => {
+    const b=e.target.closest('button'); if(!b) return; posAns[seg.dataset.i]=b.dataset.k;
+    seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    document.getElementById('pr'+seg.dataset.i).style.background=''; }));
+  document.getElementById('pcheck').onclick = () => {
+    let ok=0; POS.forEach(([w,a],i)=>{ const row=document.getElementById('pr'+i); if(!posAns[i]){row.style.background='';return;}
+      const g=a.includes(posAns[i]); if(g) ok++; row.style.background = g?'var(--ok-soft)':'var(--bad-soft)'; });
+    document.getElementById('pres').textContent = `${ok} af ${POS.length} rétt` + (ok===POS.length?' — vel gert! Mundu aukaspurninguna.':'');
+    if(ok===POS.length) markDone('ordflokkar');
+  };
+};
+
+/* ---- Lesskilningur ---- */
+const QS = {
+ '1. stig: Svarið stendur í textanum':[
+  'Hvenær og hvar rak Jamestown á land og hvernig var veðrið þann dag?',
+  'Hve lengi hafði skipið rekið um höfin og hvers vegna var enginn um borð?',
+  'Hvað var skipið með um borð, hvert átti farmurinn að fara og til hvers átti að nota hann?',
+  'Hvað gerðist þegar skipið lenti í óviðri á Norður-Atlantshafi og hvað varð um áhöfnina?',
+  'Hvers vegna tók skipstjórinn dóttur sína með í ferðina?',
+  'Nefndu að minnsta kosti fjögur hús, mannvirki eða hluti á Íslandi sem eru úr timbrinu úr Jamestown.',
+  'Úr hverju er predikunarstóllinn í Hvalsneskirkju og hvaðan kom efnið?',
+  'Hvaða munir úr skipinu hafa fundist í hafinu og hvar eru þeir geymdir núna?',
+  'Hvað ætlar áhugamannafélagið að gera næst og hvað á að standa á koparskjöldunum?'],
+ '2. stig: Lesið á milli línanna':[
+  'Í fyrirsögninni er Jamestown kallað „draugaskip“. Var það í raun draugaskip? Hvers vegna heldur þú að fréttamaðurinn hafi valið þetta orð í fyrirsögnina?',
+  'Í fréttinni stendur að það hafi verið gæfa fyrir Íslendinga að skipið skyldi reka á land. En fyrir hverja var strandið ógæfa? Nefndu að minnsta kosti tvo og útskýrðu hvers vegna.',
+  'Tómas kallar ferðina „Titanic-dæmi“. Hvað á hann við? Hvað er líkt og hvað er ólíkt með örlögum Jamestown og Titanic?',
+  'Í fréttinni segir að áhöfninni hafi verið bjargað en „þá finnur enginn skipið“. Hvers vegna heldur þú að svona erfitt hafi verið að finna stórt skip á Norður-Atlantshafi árið 1881? Hugsaðu um tæknina sem var til þá.',
+  'Tómas kallar timbrið „guðsgjöf“ og segir að „guð hafi verið í vinnu“. Er þetta staðreynd eða skoðun? Hvers vegna heldur þú að hann tali svona um strandið?',
+  'Félagið vill skrá áreiðanlegar heimildir um húsin. Hvers vegna skiptir það máli? Hvað gæti gerst ef sagan væri aðeins sögð munnlega, mann fram af manni?'],
+ '3. stig: Handan textans':[
+  'Ímyndaðu þér að þú búir í Höfnum árið 1881 og vaknir við að risastórt mannlaust skip liggur í fjörunni. Hvað myndir þú hugsa og hvað myndir þú gera?',
+  'Ef skip með dýrmætum farmi strandar, hver ætti að eiga farminn: eigandinn, fólkið sem bjargar honum eða ríkið? Rökstyddu svarið.',
+  'Félagið vill setja koparskildi á húsin sem eru úr timbrinu. Er gagn að því að merkja hús með sögu sinni? Nefndu hús eða stað í þinni heimabyggð sem ætti skilið svona skjöld og segðu hvers vegna.',
+  'Gæti skip týnst í dag og rekið mannlaust um höfin í fjóra mánuði án þess að nokkur fyndi það? Hvaða tækni kemur í veg fyrir það?']
+};
+let qTab = 0;
+def('spurningar','Spurningar á þremur stigum','Lesskilningur', () => { const keys=Object.keys(QS);
+  return `<p class="lead">Byrjaðu á 1. stigi. Þegar þú ert búin(n) ferðu á næsta stig.</p>
+  ${nb(['Skrifaðu númer spurningarinnar og svaraðu í heilum setningum.','Á 2. og 3. stigi: segðu alltaf <b>af hverju</b> þú heldur það sem þú heldur.'])}
+  <div class="tabs" role="tablist">${keys.map((k,i)=>`<button role="tab" aria-selected="${i===qTab}" data-i="${i}">${k.split(':')[0]}</button>`).join('')}</div>
+  <h3>${keys[qTab]}</h3><ol class="q">${QS[keys[qTab]].map(q=>`<li>${q}</li>`).join('')}</ol>
+  <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">Opna fréttina ↗</a>`;});
+T.spurningar.after = () => app.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { qTab=+b.dataset.i; markDone('spurningar'); render(); });
+
+const MF = [
+ ['Stýrið brotnaði í óviðri á Norður-Atlantshafi.',1],
+ ['Skipið var á leið til Englands með við undir járnbrautarteina.',1],
+ ['Skipstjórinn hafði unnið fyrir sama fyrirtækið alla ævi.',2],
+ ['Áhöfninni var bjargað við illan leik.',2],
+ ['Gröndalshús í Reykjavík er byggt úr timbrinu.',3],
+ ['Seglvinda og akkeri úr skipinu eru á Byggðasafninu.',3],
+ ['Félagið fékk styrk til að skrá áreiðanlegar heimildir.',4],
+ ['Hugmyndin er að festa koparskildi á húsin.',4]
+];
+let mfAns = {};
+def('millifyrirsagnir','Millifyrirsagnir','Hvar á hver upplýsing heima?', () => `
+  <p class="lead">Fréttin skiptist í kafla með fjórum millifyrirsögnum. Millifyrirsögn segir lesandanum hvað kemur næst. Undir hvaða millifyrirsögn stendur hver upplýsing?</p>
+  <div class="words sort">${MF.map(([s],i)=>`<div class="wordrow" id="mf${i}"><span class="w" style="font-weight:400;flex:1 1 100%">${s}</span><div class="seg" data-i="${i}">
+   ${SECTIONS.slice(1).map((l,k)=>`<button data-k="${k+1}" aria-pressed="${mfAns[i]===k+1}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+  <div class="row-actions"><button class="btn" id="mfcheck">Athuga</button><span class="result" id="mfres"></span></div>
+  ${nb(['Tvær millifyrirsagnanna eru tilvitnanir í Tómas Knútsson. Hvers vegna heldur þú að fréttamenn noti tilvitnanir sem millifyrirsagnir?',
+   'Hvaða millifyrirsögn finnst þér best? Af hverju?',
+   'Búðu til þína eigin millifyrirsögn fyrir hvern kafla. Hún má mest vera sex orð.'])}`);
+T.millifyrirsagnir.after = () => {
+  app.querySelectorAll('.sort .seg').forEach(seg => seg.addEventListener('click', e => {
+    const b=e.target.closest('button'); if(!b) return; mfAns[seg.dataset.i]=+b.dataset.k;
+    seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    document.getElementById('mf'+seg.dataset.i).style.background=''; }));
+  document.getElementById('mfcheck').onclick = () => { let ok=0;
+    MF.forEach(([s,a],i)=>{ const row=document.getElementById('mf'+i); if(!mfAns[i]){ row.style.background=''; return; }
+      const g=mfAns[i]===a; if(g) ok++; row.style.background=g?'var(--ok-soft)':'var(--bad-soft)'; });
+    document.getElementById('mfres').textContent=`${ok} af ${MF.length} rétt`; if(ok===MF.length) markDone('millifyrirsagnir'); };
+};
+
+const EVENTS = [
+ ['Jamestown leggur af stað frá Ameríku, drekkhlaðið af timbri','Ameríka'],
+ ['Stýrið brotnar í miklu óviðri','Norður-Atlantshaf'],
+ ['Annað skip bjargar áhöfninni','Norður-Atlantshaf'],
+ ['Enginn finnur skipið þegar á að bjarga því','Norður-Atlantshaf'],
+ ['Skipið rekur mannlaust um höfin í fjóra mánuði','Norður-Atlantshaf'],
+ ['Skipið rekur á land 26. júní 1881','Hafnir á Reykjanesskaga'],
+ ['Timbrið er notað í hús víða um Suðurland og Suðurnes','Suðurland og Suðurnes'],
+ ['Munir úr skipinu finnast í hafinu og fara á Byggðasafnið','Reykjanes'],
+ ['Áhugamannafélagið fær styrk til að skrá heimildir','Ísland, árið 2020']
+];
+let tlPick = [], tlShuffle = null;
+def('timalina','Ferðalag Jamestown','Raðaðu atburðunum', () => {
+  if(!tlShuffle) tlShuffle = EVENTS.map((_,i)=>i).sort(()=>Math.random()-.5);
+  return `<p class="lead">Fréttin segir ekki söguna í tímaröð. Smelltu á atburðina í réttri röð, þann fyrsta fyrst.</p>
+  <div class="events">${tlShuffle.map(i=>{ const p=tlPick.indexOf(i);
+    return `<button class="chip event ${p>-1?'picked':''}" data-e="${i}" id="ev${i}"><span class="num">${p>-1?p+1:''}</span>${EVENTS[i][0]}<small>${EVENTS[i][1]}</small></button>`;}).join('')}</div>
+  <div class="row-actions"><button class="btn" id="tcheck">Athuga röðina</button><button class="btn ghost" id="treset">Byrja aftur</button><span class="result" id="tres"></span></div>
+  ${nb(['Teiknaðu tímalínu og skrifaðu atburðina á hana í réttri röð.','Fréttin byrjar ekki á byrjuninni. Á hverju byrjar hún og hvers vegna heldur þú að fréttamaðurinn hafi valið að byrja þar?'])}`;});
+T.timalina.after = () => {
+  app.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { const i=+b.dataset.e, p=tlPick.indexOf(i);
+    if(p>-1) tlPick.splice(p,1); else tlPick.push(i); render(); });
+  document.getElementById('treset').onclick = () => { tlPick=[]; tlShuffle=null; render(); };
+  document.getElementById('tcheck').onclick = () => {
+    let ok=0; tlPick.forEach((e,k)=>{ const g=e===k; if(g) ok++; document.getElementById('ev'+e).classList.add(g?'ok':'bad'); });
+    document.getElementById('tres').textContent = tlPick.length<EVENTS.length ? `Þú hefur raðað ${tlPick.length} af ${EVENTS.length}. ${ok} á réttum stað.` : `${ok} af ${EVENTS.length} á réttum stað`;
+    if(ok===EVENTS.length) markDone('timalina');
+  };
+};
+
+def('samantekt','Samantekt í 15 orðum','Hver kafli í einni setningu', () => { const st=S.get('sum',{});
+  return `<p class="lead">Dragðu hvern hluta fréttarinnar saman í <b>einni setningu, mest ${SUMLIMIT} orð</b>. Regla: Þú mátt ekki afrita meira en þrjú orð í röð úr fréttinni.</p>
+  ${nb(['Skrifaðu setningarnar fimm í stílabókina þegar þú ert ánægð(ur) með þær.','Lestu þær saman. Segja þær alla söguna? Hverju misstirðu?'])}
+  ${SECTIONS.map((m,i)=>`<div class="sum"><label for="s${i}">${i+1}. ${m}</label><input type="text" id="s${i}" value="${esc(st[i]||'')}"><span class="counter" id="sc${i}"></span></div>`).join('')}`;});
+T.samantekt.after = () => SECTIONS.forEach((_,i)=>{ const inp=document.getElementById('s'+i), c=document.getElementById('sc'+i);
+  const upd=()=>{ const n=inp.value.trim()?inp.value.trim().split(/\s+/).length:0; c.textContent=`${n} / ${SUMLIMIT} orð`; c.classList.toggle('over',n>SUMLIMIT); };
+  upd(); inp.oninput=()=>{ const st=S.get('sum',{}); st[i]=inp.value; S.set('sum',st); upd(); markDone('samantekt'); }; });
+
+/* ---- Saga og heimildir ---- */
+const CHECK5 = ['<b>Hver</b> skrifaði þetta eða segir frá? Veit hann eða hún eitthvað um efnið?','<b>Hvenær</b> var þetta skrifað? Getur eitthvað hafa breyst síðan?',
+ '<b>Hvers vegna</b> var þetta skrifað? Til að upplýsa, skemmta, selja eða sannfæra?','<b>Hvaða sannanir</b> eru nefndar? Er vísað í heimildir?','<b>Segja aðrar heimildir</b> það sama?'];
+def('heimildaryni','Hvað segja heimildirnar?','Heimildir stangast á', () => `
+  <p class="lead">Í Máli nr. 2 lærðir þú fimm spurningar um hverja heimild. Nú reynir á þær, því heimildir um Jamestown segja ekki alltaf það sama.</p>
+  <ol class="q">${CHECK5.map(c=>`<li>${c}</li>`).join('')}</ol>
+  <h3>Heimildirnar stangast á</h3>
+  <div class="scroll"><table class="fill"><tr><th>Atriði</th><th>Ein heimild segir</th><th>Önnur heimild segir</th></tr>
+   <tr><td>Hverjir voru með skipstjóranum</td><td>Dóttir hans (RÚV)</td><td>Kona hans og barn (Wikipedia)</td></tr>
+   <tr><td>Hve margir plankar voru um borð</td><td>Rúmlega 16.000 (Ferlir)</td><td>Um 100.000 (Minjastofnun)</td></tr>
+   <tr><td>Hvaða dag skipið rak á land</td><td>26. júní 1881 (RÚV og annáll frá 1881)</td><td>17. júní (gamalt viðtal á Ferli)</td></tr></table></div>
+  ${nb(['Veldu eitt atriði úr töflunni. Hvaða heimild treystir þú betur og hvers vegna? Notaðu spurningarnar fimm.',
+   'Annáll er skrifaður á þeim tíma sem atburðirnir gerast. Viðtal getur verið tekið mörgum árum seinna. Hvort er líklegra til að vera rétt um dagsetningu?',
+   'Tómas Knútsson er áhugamaður en ekki sagnfræðingur. Gerir það hann að ótraustri heimild? Hvað styrkir hann sem heimild og hvað veikir hann?',
+   '<b>Gildra!</b> Titanic sökk árið 1912. Gat fólk árið 1881 talað um „Titanic-dæmi“? Hver notar samlíkinguna og hvenær? Er hún samt góð?',
+   'Fréttamenn gera líka villur. Þrjú staðanöfn í fréttinni eru rangt stafsett. Berðu staðanöfnin saman við kort á ja.is og finndu villurnar.'])}
+  <div class="row-actions">${extlink(ARTICLE,'RÚV (2020)')}${extlink('https://ferlir.is/jamestown-skuli-magnusson-o-fl/','Ferlir')}${extlink('https://www.minjastofnun.is/is/vidburdir/soguganga-jamestown-strandid','Minjastofnun')}${extlink('https://en.wikipedia.org/wiki/Jamestown_(ship)','Wikipedia (á ensku)')}${extlink('https://ja.is/kort/','Kort á ja.is')}</div>`);
+
+def('timbur','Hvers vegna var timbur gull?','Saga og samfélag', () => `
+  <p class="lead">Í fréttinni er timbrið kallað guðsgjöf. Til að skilja hvers vegna þarftu að vita hvernig Ísland var árið 1881.</p>
+  <div class="notebook" style="background:var(--bg)"><strong>Vissir þú?</strong>
+   <p>Þegar landnámsmenn komu til Íslands var láglendið að miklu leyti þakið skógi eða kjarri. Prófessor í grasafræði skrifar á Vísindavefnum: <em>„Landið hefur því tapað nær öllum sínum skógum og kjarri.“</em></p></div>
+  ${nb(['Hvernig voru flest íbúðarhús á Íslandi byggð árið 1881? Úr hverju voru veggirnir og þakið? Leitaðu upplýsinga.',
+   'Hvers vegna var svona erfitt að fá timbur á Íslandi? Hvaðan þurfti að fá það?',
+   'Ímyndaðu þér að það vanti allt timbur á Íslandi í dag. Nefndu fimm hluti í skólastofunni sem væru ekki til.',
+   'Farmurinn var seldur á uppboði. Hvað er uppboð? Hvers vegna heldur þú að timbrið hafi verið selt en ekki gefið?',
+   'Hvaða áhrif heldur þú að allt þetta timbur hafi haft á líf fólks á Suðurnesjum?'])}
+  <div class="row-actions">${extlink('https://www.visindavefur.is/svar.php?id=1164','Vísindavefurinn: Gróður- og jarðvegseyðing')}${extlink('https://www.visindavefur.is/svar.php?id=4712','Vísindavefurinn: Skógur frá landnámsöld?')}</div>`);
+
+def('kort','Kortleggðu timbrið','Kort og heimabyggð', () => `
+  <p class="lead">Áhugamannafélagið vinnur að því að kortleggja öll húsin sem voru byggð úr timbrinu. Nú gerir þú það sama.</p>
+  ${nb(['Teiknaðu kort af Reykjanesskaga og höfuðborgarsvæðinu, eða prentaðu það út.',
+   'Merktu Hafnir þar sem skipið strandaði. Notaðu sérstakt tákn.',
+   'Merktu alla staðina í fréttinni þar sem timbur úr Jamestown var notað. Þeir eru að minnsta kosti átta.',
+   'Hvers vegna heldur þú að mest af timbrinu hafi farið um Suðurnes? Hugsaðu um hvernig hlutir voru fluttir árið 1881.',
+   'Notaðu kortið á ja.is til að mæla hve langt er frá Höfnum til Reykjavíkur. Hve lengi heldur þú að hafi tekið að flytja timbrið þangað með hestum?',
+   'Er eitthvað í þinni heimabyggð sem tengist strandi, skipum eða gömlu timbri? Spurðu fjölskylduna eða leitaðu á netinu.'])}
+  <div class="row-actions">${extlink('https://ja.is/kort/','Kort á ja.is')}</div>`);
+
+def('koparskjoldur','Hannaðu koparskjöld','Heimildaverkefni', () => `
+  <p class="lead">Félagið vill festa koparskildi á húsin sem eru byggð úr timbrinu. Þú hannar einn slíkan skjöld og það sem á honum stendur verður að vera byggt á áreiðanlegum heimildum.</p>
+  <ol class="q"><li>Veldu eitt hús eða mannvirki úr fréttinni.</li>
+   <li>Finndu að minnsta kosti <b>tvær heimildir</b> um húsið eða um Jamestown. Notaðu spurningarnar fimm um hverja heimild.</li>
+   <li>Skrifaðu textann á skjöldinn. Hann má mest vera 30 orð og á að segja hvað húsið er, hvaðan timbrið kom og hvenær.</li>
+   <li>Teiknaðu skjöldinn í stílabókina eða á blað.</li>
+   <li>Skrifaðu heimildaskrá neðst.</li></ol>
+  <div class="notebook"><strong>Svona skráir þú heimild</strong>
+   <p>Höfundur. (Ár). <em>Titill.</em> Vefur eða útgefandi. Slóð</p>
+   <p style="font-size:.92rem">Ef höfundur er ekki nefndur byrjar þú á titlinum. Dæmi: <em>Mörg hús á Íslandi smíðuð úr mannlausu draugaskipi.</em> (2020). RÚV. https://www.ruv.is</p></div>
+  <div class="row-actions">${extlink('https://ferlir.is/jamestown-skuli-magnusson-o-fl/','Ferlir: Jamestown')}${extlink('https://www.minjastofnun.is/is/vidburdir/soguganga-jamestown-strandid','Minjastofnun')}</div>`);
+
+/* ---- Að lokum ---- */
+def('ritun','Dagbók um borð','Ritun', () => `
+  <p class="lead">Nú skrifar þú. Veldu annað af tveimur verkefnum og skrifaðu 150–250 orð.</p>
+  <h3>A. Dagbók dóttur skipstjórans</h3>
+  <p>Skrifaðu þrjár dagbókarfærslur: daginn sem skipið lagði af stað, daginn sem stýrið brotnaði og daginn sem áhöfninni var bjargað. Hvernig leið henni?</p>
+  <h3>B. Frétt frá Höfnum árið 1881</h3>
+  <p>Þú ert fréttamaður árið 1881. Skrifaðu frétt um skipið sem rak á land. Mundu eftir fyrirsögn, inngangi og að minnsta kosti einni millifyrirsögn.</p>
+  ${nb(['Notaðu að minnsta kosti þrjú kjarnaorð og eitt orðasamband. Strikaðu undir þau.','Lestu yfir stafsetningu og greinarmerki áður en þú skilar.'])}
+  <section class="bank"><h3>Orðabankinn</h3>
+   <div class="bankwords">${CORE.map(([w])=>`<span class="bw">${w}</span>`).join('')}</div>
+   <div class="bankidioms">${IDIOMS.map(([o,m])=>`<div><b>${o}</b> <span class="muted">${m}</span></div>`).join('')}</div>
+   <div class="row-actions"><button class="btn ghost" data-go="kjarnaord">Kjarnaorðin 15</button><button class="btn ghost" data-go="ordtok">Orðasamböndin</button></div>
+  </section>`);
+
+const SELF = ['Ég get útskýrt orðin strand, farmur, sneypuför og örlög.','Ég get útskýrt hvað millifyrirsagnir gera í frétt.',
+ 'Ég get sagt söguna af Jamestown í réttri tímaröð.','Ég get útskýrt hvers vegna timbur var svona dýrmætt á Íslandi árið 1881.',
+ 'Ég get borið saman tvær heimildir sem stangast á og rökstutt hvorri ég treysti betur.','Ég get skráð heimild rétt í heimildaskrá.',
+ 'Ég fór aftur í „Hvað veit ég?“ og sé hvað ég hef lært.'];
+def('sjalfsmat','Sjálfsmat','Hvað lærði ég?', () => { const st=S.get('self',{});
+  return `<p class="lead">Hakaðu við það sem þú getur núna.</p>
+  <div class="checks">${SELF.map((s,i)=>`<label><input type="checkbox" id="self${i}" ${st[i]?'checked':''}><span>${s}</span></label>`).join('')}</div>
+  ${nb(['Teldu hve mörg orð þú merktir <em>Veit ekki</em> í byrjun en kannt núna. Skrifaðu: <em>Ég kann núna ___ ný orð.</em>','Skrifaðu eina setningu um það sem kom þér mest á óvart.'])}
+  <button class="btn ghost" style="align-self:flex-start" data-go="hvadveit">Opna „Hvað veit ég?“ aftur</button>`;});
+T.sjalfsmat.after = () => { SELF.forEach((_,i)=>document.getElementById('self'+i).onchange=e=>{ const st=S.get('self',{}); st[i]=e.target.checked; S.set('self',st); markDone('sjalfsmat'); }); };
+
+/* ---------- framvinda ---------- */
+const CFG = Object.assign({ samfelagsfraedi:false, adlokum:false, rod:true }, window.STILLINGAR || {});
+function markDone(id){ const d=S.get('done',{}); if(!d[id]){ d[id]=1; S.set('done',d); } }
+const lokid = () => S.get('lokid',{});
+const ORDER = GROUPS.flatMap(g=>g.ids);
+const groupOf = id => GROUPS.find(g=>g.ids.includes(id));
+const needCount = g => g.need==='all' ? g.ids.length : g.need;
+const doneCount = g => { const l=lokid(); return g.ids.filter(id=>l[id]).length; };
+const complete = g => doneCount(g) >= needCount(g);
+function groupLock(g){
+  if(g.teacher && !CFG[g.teacher]) return 'Kennarinn opnar þennan hluta síðar.';
+  if(CFG.rod && g.after){ const missing=g.after.map(k=>GROUPS.find(x=>x.key===k)).filter(x=>!complete(x));
+    if(missing.length) return 'Kláraðu fyrst: ' + missing.map(x=>x.t.toLowerCase()).join(' og ') + '.'; }
+  return null;
+}
+const NUM = {2:'tvö',4:'fjórum',5:'fimm'};
+function reqText(g){
+  if(g.need==='all') return g.ids.length===1 ? 'Skylduverkefni' : g.ids.length===2 ? 'Gerðu bæði' : 'Gerðu öll';
+  return `Veldu ${NUM[g.need]} af ${NUM[g.ids.length]}`;
+}
+function totals(){ return GROUPS.reduce((a,g)=>({tot:a.tot+needCount(g), dn:a.dn+Math.min(doneCount(g),needCount(g))}),{tot:0,dn:0}); }
+const LOCK = '<svg class="lockico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+/* ---------- leiðin mín (hliðarstika) ---------- */
+function pathPanel(){
+  const {tot,dn}=totals(), l=lokid();
+  return `<div class="path-head"><span class="eyebrow">LEIÐIN MÍN</span>
+    <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${dn}"><span style="width:${tot?dn/tot*100:0}%"></span></div>
+    <small>${dn} af ${tot} verkefnum lokið</small></div>
+  <button class="pl home ${view==='radgatur'?'cur':''}" data-go="radgatur"><span class="st">i</span>Fréttin og yfirlit</button>
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<div class="pg ${lock?'locked':''} ${c?'complete':''}">
+      <div class="pg-h"><b>${g.t}</b><span>${lock?LOCK+'Læst':c?'✓ Lokið':`${doneCount(g)} / ${needCount(g)}`}</span></div>
+      <p class="pg-note">${lock || reqText(g)}</p>
+      <ul>${g.ids.map(id=>`<li><button class="pl ${id===view?'cur':''} ${l[id]?'done':''}" data-go="${id}" ${lock?'disabled':''}><span class="st">${l[id]?'✓':''}</span>${T[id].title}</button></li>`).join('')}</ul>
+    </div>`;}).join('')}`;
+}
+
+/* ---------- síður ---------- */
+function header(back){
+  return `<header class="top"><button class="brand" data-go="heim">RÁÐGÁTUSTOFAN</button>${back}</header>`;
+}
+function news(){
+  const l=lokid(), started=S.get('done',{});
+  return `<article class="sheet">
+   <span class="eyebrow">${CASE.eyebrow}</span>
+   <h1>${CASE.title}</h1>
+   <p class="lead">${CASE.lead}</p>
+   <a class="cta" href="${ARTICLE}" target="_blank" rel="noopener">${CASE.linkText}</a>
+   <p class="muted">${CASE.note}</p>
+  </article>
+  ${GROUPS.map(g=>{ const lock=groupLock(g), c=complete(g);
+    return `<section class="group"><div class="group-title"><h2>${g.t}</h2>${g.s?`<small>(${g.s})</small>`:''}
+      <span class="req ${lock?'is-locked':c?'is-done':''}">${lock?LOCK+'Læst':c?'✓ Lokið':`${reqText(g)} · ${doneCount(g)}/${needCount(g)}`}</span></div>
+     ${lock?`<p class="muted">${lock}</p>`:''}
+     <div class="tasks">${g.ids.map(id=>{ const st = l[id]?'<span class="state ok">✓ Lokið</span>':started[id]?'<span class="state">Byrjað</span>':'';
+       return lock ? `<div class="task locked" aria-disabled="true"><b>${T[id].title}</b><span>${T[id].sub}</span><span class="state">${LOCK}Læst</span></div>`
+                   : `<button class="task ${l[id]?'is-done':''}" data-go="${id}"><b>${T[id].title}</b><span>${T[id].sub}</span>${st}</button>`;}).join('')}</div></section>`;}).join('')}`;
+}
+function task(id){
+  const t=T[id], g=groupOf(id), lock=groupLock(g), l=lokid();
+  if(lock) return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()}</span><h1>${t.title}</h1>
+    <p class="lead">${LOCK}Þetta verkefni er læst. ${lock}</p><button class="btn" style="align-self:flex-start" data-go="radgatur">Aftur í yfirlitið</button></article>`;
+  const i=ORDER.indexOf(id), prev=ORDER[i-1], next=ORDER[i+1];
+  return `<article class="sheet"><span class="eyebrow">${g.t.toUpperCase()} · ${reqText(g).toUpperCase()}</span><h1>${t.title}</h1>${t.render()}
+    <div class="finish"><button class="btn ${l[id]?'is-done':''}" id="finish">${l[id]?'✓ Lokið. Smelltu til að afturkalla':'Ég er búin(n) með verkefnið'}</button>
+    <span class="muted">${g.t}: ${Math.min(doneCount(g),needCount(g))} af ${needCount(g)} lokið</span></div></article>
+  <nav class="pager">${prev?`<button class="back" data-go="${prev}">← ${T[prev].title}</button>`:'<span></span>'}${next?`<button class="back" data-go="${next}">${T[next].title} →</button>`:''}</nav>`;
+}
+
+let view = 'radgatur';
+function render(){
+  const {tot,dn}=totals();
+  const back = T[view] ? '<button class="back" data-go="radgatur">← Öll verkefni</button>' : '<button class="back" data-go="heim">← Forsíða</button>';
+  app.innerHTML = `${header(back)}
+   <div class="layout"><aside class="path" aria-label="Leiðin mín">${pathPanel()}</aside><main class="col">${T[view]?task(view):news()}</main></div>
+   <button class="pathfab ${window.scrollY>120?'show':''}" id="pathfab">Leiðin mín · ${dn}/${tot}</button>
+   <div class="drawer" id="drawer" hidden><div class="drawer-panel" role="dialog" aria-label="Leiðin mín"><button class="back" id="drawclose" style="align-self:flex-start">Loka</button>${pathPanel()}</div></div>`;
+  const fin=document.getElementById('finish');
+  if(fin) fin.onclick=()=>{ const s=lokid(); if(s[view]) delete s[view]; else s[view]=true; S.set('lokid',s); render(); };
+  document.getElementById('pathfab').onclick=()=>{ document.getElementById('drawer').hidden=false; };
+  document.getElementById('drawclose').onclick=()=>{ document.getElementById('drawer').hidden=true; };
+  document.getElementById('drawer').onclick=e=>{ if(e.target.id==='drawer') e.target.hidden=true; };
+  if(T[view] && T[view].after && !groupLock(groupOf(view))) T[view].after();
+}
+function go(v){ if(v==='heim'){ location.href='../'; return; } view=v; render(); window.scrollTo({top:0}); try{ history.replaceState(null,'','#'+v); }catch(e){} }
+app.addEventListener('click', e => { const b=e.target.closest('[data-go]'); if(b && !b.disabled){ e.preventDefault(); go(b.dataset.go); } });
+window.addEventListener('scroll', () => { const f=document.getElementById('pathfab'); if(f) f.classList.toggle('show', window.scrollY>120); }, {passive:true});
+const h = (location.hash||'').slice(1); if(h==='radgatur' || T[h]) view=h;
+render();
+</script>
+</body>
+</html>

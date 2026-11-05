@@ -6,6 +6,9 @@ Verkefnavefur fyrir 7. bekk. Hver frétt er eitt „mál“ í sinni eigin möpp
 radgatur/
 ├── index.html              forsíðan með möppunum
 ├── css/stofan.css          sameiginlegt útlit fyrir allar síður
+├── mal-03-jamestown/       Mál nr. 3: draugaskipið Jamestown (RÚV, 2020)
+│   ├── index.html
+│   └── stillingar.js       samfelagsfraedi og adlokum eru læst
 ├── mal-02-tunglid/         Mál nr. 2: tunglferðirnar (Orðspor 2, bls. 48–51)
 │   ├── index.html
 │   └── stillingar.js       heimildavinna og að lokum eru læst
