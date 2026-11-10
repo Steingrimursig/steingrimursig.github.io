@@ -154,8 +154,18 @@ table.money tr.inc td{font-weight:800;color:var(--green);border-bottom:2px solid
 .receipt .cat{font-weight:700;margin-top:8px;text-transform:uppercase;font-size:12.5px;letter-spacing:.06em}
 .receipt .store{color:#6b6559;font-size:12.5px}
 .receipt .big{font-weight:700;font-size:16px}
-.qa{display:flex;flex-direction:column;gap:14px}
-.print-answers{display:none}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.choices{grid-template-columns:1fr}}
+.choice{display:flex;flex-direction:column;gap:4px;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 16px;cursor:pointer}
+.choice b{font-family:var(--display);font-weight:600;font-size:20px}
+.choice span{color:var(--dim);font-size:15px}
+.choice[aria-pressed="true"]{border-color:var(--green);background:var(--green-soft)}
+.choice[aria-pressed="true"] b::after{content:" ✓";color:var(--green)}
+.gat{display:flex;flex-direction:column;gap:8px}
+.gat label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.gat input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--green)}
+.gat input:checked+span{color:var(--dim);text-decoration:line-through}
+.teach{background:var(--gold);color:#1d2622;font-weight:800;text-align:center;padding:8px 16px}
 
 footer{padding-block:0 40px;color:var(--dim);font-size:14px}
 footer .inner{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -166,8 +176,7 @@ footer button{border:1.5px solid var(--line);background:transparent;border-radiu
   body{background:#fff;font-size:12pt}
   .card{border:0;padding:0}
   .receipt{border:1px solid #999}
-  textarea{display:none}
-  .print-answers{display:block;white-space:pre-wrap;border-left:3px solid #999;padding-left:10px;margin-top:4px}
+  .teach{display:none}
 }
 </style>
 </head>
@@ -179,6 +188,7 @@ footer button{border:1.5px solid var(--line);background:transparent;border-radiu
   <p class="who" id="whoLine" hidden></p>
 </div></header>
 
+<div class="teach" id="teach" hidden>Kennaraskoðun: öll skref eru opin og ekkert vistast. Nemendur nota slóðina án ?kennari.</div>
 <nav class="rail pad" aria-label="Skref"><div class="inner" id="rail"></div></nav>
 
 <main class="pad"><div class="inner" id="main"></div></main>
@@ -256,23 +266,50 @@ const LEIT=[
 const CATS=["Jólamatur","Meðlæti","Eftirréttur","Sætindi og ávextir","Drykkir","Gjafir","Skraut og annað"];
 const BUDIR=["Bónus","Krónan","Nettó","Hagkaup","Heimkaup","Fjarðarkaup","Elko","Penninn Eymundsson","A4","Rúmfatalagerinn","Byko","Húsasmiðjan","Útilíf","Kids Coolshop"];
 const TENGLAR=[["Krónan","https://kronan.is"],["Nettó","https://netto.is"],["Hagkaup","https://hagkaup.is"],["Heimkaup","https://heimkaup.is"],["Bónus","https://bonus.is"],["Elko","https://elko.is"],["Penninn Eymundsson","https://penninn.is"],["A4","https://a4.is"]];
-const STEPS=["Byrjum","Fjölskyldan","Finnið ódýrast","Jólakarfan","Óvænt atvik","Kvittun"];
-const SPURN=[
- "Hvað kostuðu jólin hjá fjölskyldunni ykkar samtals og hvað var mikið eftir í jólasjóðnum?",
- "Í hvaða verslunum fannst ykkur ódýrast að versla? Kom eitthvað verð ykkur á óvart?",
- "Hverju þurftuð þið að sleppa eða breyta til að halda ykkur innan fjárhagsáætlunar?",
- "Hvaða áhrif hafði óvænta atvikið á jólin ykkar?",
- "Ef fjölskyldan hefði haft 50.000 kr. minna, hverju hefðuð þið sleppt?"
+const STEPS=["Byrjum","Fjölskyldan","Finnið ódýrast","Jólakarfan","Óvænt atvik","Lokaafurð"];
+const AFURD=[
+ {id:"veggspjald",t:"Veggspjald",d:"Jólin hjá fjölskyldunni ykkar á einu veggspjaldi, á A3-blaði eða í spjaldtölvunni. Prentið kvittunina og límið hana á."},
+ {id:"baeklingur",t:"Jólabæklingur",d:"Auglýsingabæklingur eins og verslanirnar senda heim fyrir jólin, nema með ykkar innkaupum og bestu kaupunum."},
+ {id:"frettir",t:"Jólafréttir",d:"1–2 mínútna fréttatími á myndbandi. Einn er fréttamaður og hinir eru viðmælendur, t.d. mamman, pabbinn eða verslunarstjórinn."},
+ {id:"myndasaga",t:"Myndasaga",d:"Sagan af jólum fjölskyldunnar, frá því að launin koma inn og þar til jólin ganga í garð."}
+];
+const GAT=[
+ "Fjölskyldan: hverjir eru í henni og hvað hún hafði í jólasjóð",
+ "Útreikningurinn: laun − föst útgjöld = jólasjóður",
+ "Hvar þið funduð ódýrustu jólasteikina og hvað hún kostaði",
+ "Óvænta atvikið og hvernig þið brugðust við því",
+ "Niðurstaðan: hvað jólin kostuðu og hvað var eftir í sjóðnum",
+ "Eitt gott ráð til fjölskyldna sem vilja spara fyrir jólin",
+ "Nöfn allra í hópnum"
+];
+const MAT=[
+ ["Útreikningar","Tölurnar eru réttar og koma heim og saman við kvittunina."],
+ ["Innihald","Allt á gátlistanum kemur fram."],
+ ["Vandvirkni","Lokaafurðin er snyrtileg, skýr og skemmtileg."],
+ ["Kynning og samvinna","Allir í hópnum taka þátt og þið kláruðuð á tilsettum tíma."]
 ];
 
 /* ============ STAÐA ============ */
 const KEY="jolasjodur-v1";
 const fresh=()=>({step:0,hopur:"",nofn:"",fam:null,sjodurSvar:"",sjodurOk:false,tilraunir:0,
   leit:Object.fromEntries(LEIT.map(l=>[l.id,{vara:"",handa:"",v:[{b:"",p:""},{b:"",p:""},{b:"",p:""}]}])),
-  karfa:[],atvik:null,svor:SPURN.map(()=>"")});
+  karfa:[],atvik:null,afurd:"",gat:GAT.map(()=>false)});
+const KENNARI=new URLSearchParams(location.search).has("kennari");
+function demo(){const d=fresh();Object.assign(d,{hopur:"Sýnishorn",nofn:"Kennaraskoðun",fam:0,sjodurSvar:"212.000",sjodurOk:true,atvik:0,afurd:"veggspjald"});
+  const L=(id,vara,v,handa)=>{d.leit[id]={vara,handa:handa||"",v:v.map(([b,p])=>({b,p}))};};
+  L("kjot","Hamborgarhryggur, 1,4 kg",[["Krónan","6.990"],["Bónus","6.590"],["Hagkaup","7.490"]]);
+  L("mand","Mandarínur, 2,3 kg kassi",[["Krónan","1.398"],["Bónus","1.298"],["Nettó","1.459"]]);
+  L("konf","Konfektkassi, 400 g",[["Krónan","3.199"],["Hagkaup","3.499"],["Nettó","3.149"]]);
+  L("ol","Jólaöl, 2 l",[["Bónus","598"],["Krónan","629"],["Hagkaup","699"]]);
+  L("gjof","Spil",[["Elko","5.995"],["Penninn Eymundsson","6.499"],["A4","5.799"]],"Óli (8 ára)");
+  d.karfa=[{cat:"Meðlæti",vara:"Rauðkál",b:"Bónus",verd:"459",magn:"1",handa:""},{cat:"Meðlæti",vara:"Kartöflur, 2 kg",b:"Bónus",verd:"798",magn:"1",handa:""},
+   {cat:"Eftirréttur",vara:"Ís",b:"Krónan",verd:"1.299",magn:"1",handa:""},{cat:"Sætindi og ávextir",vara:"Piparkökur",b:"Nettó",verd:"599",magn:"2",handa:""},
+   {cat:"Gjafir",vara:"Bók",b:"Penninn Eymundsson",verd:"5.490",magn:"1",handa:"Sara (12 ára)"}];
+  return d;}
 let S=fresh();
-try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(fresh(),JSON.parse(r));}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+if(KENNARI)S=demo();
+else try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(fresh(),JSON.parse(r));}catch(e){}
+const save=()=>{if(KENNARI)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 
 /* ============ HJÁLP ============ */
 const kr=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,".")+" kr.";
@@ -298,7 +335,7 @@ function allarLinur(){
 const linaSamtals=l=>(isFinite(l.verd)?l.verd:0)*(isFinite(l.magn)?l.magn:0);
 const eytt=()=>allarLinur().reduce((a,l)=>a+linaSamtals(l),0);
 function opinn(i){
-  if(i<=1)return true;
+  if(i<=1||KENNARI)return true;
   if(!S.sjodurOk)return false;
   if(i<=3)return true;
   if(i===4)return allarLinur().length>=6;
@@ -342,7 +379,7 @@ V[0]=()=>`
     <div class="box gold"><b>1. kennslustund</b><br>Skref 1 og 2: Fjölskyldan og leitin að ódýrasta verðinu.</div>
     <div class="box gold"><b>2. kennslustund</b><br>Skref 3 og 4: Jólakarfan og óvænta atvikið.</div>
   </div>
-  <div class="box gold"><b>3. kennslustund</b><br>Skref 5: Kvittunin tilbúin og stutt kynning fyrir bekkinn.</div>
+  <div class="box gold"><b>3. og 4. kennslustund</b><br>Skref 5: Lokaafurð (veggspjald, bæklingur, fréttir eða myndasaga) og stutt kynning fyrir bekkinn.</div>
 </section>
 <section class="card stack">
   <h3>Hópurinn</h3>
@@ -372,7 +409,7 @@ V[1]=()=>{
     <div class="row"><input type="text" inputmode="numeric" id="sjodurSvar" value="${esc(S.sjodurSvar)}" placeholder="Svar í krónum" style="max-width:220px" ${S.sjodurOk?"disabled":""}>
      ${S.sjodurOk?"":`<button class="btn" id="checkSjodur">Athuga</button>`}</div>
     <div id="sjodurMsg">${S.sjodurOk?`<p class="msg ok">Rétt! Jólasjóðurinn ykkar er ${kr(sjodur())}</p>`:""}</div>
-   </div></section>${nextBtn(2)}`;
+   </div></section>${KENNARI?`<div class="box gold row noprint"><b>Kennari:</b> fjölskylda ${S.fam+1} af ${FAM.length} · jólasjóður ${kr(sjodur())}<button class="btn small right" id="nextFam">Næsta fjölskylda →</button></div>`:""}${nextBtn(2)}`;
 };
 
 V[2]=()=>`
@@ -462,18 +499,27 @@ V[4]=()=>{
       :a.a>0?"Jólasjóðurinn hefur stækkað. Ræðið saman hvort þið viljið nota peninginn eða geyma hann."
       :"Farið aftur í jólakörfuna og gerið breytingarnar sem spjaldið segir til um."}</p>
     <div class="row"><button class="btn ghost" data-go="3">← Aftur í jólakörfuna</button></div></div>
-  </section>${nextBtn(5,"Klára kvittunina")}`;};
+  </section>${KENNARI?`<div class="box gold row noprint"><b>Kennari:</b> atvik ${S.atvik+1} af ${ATVIK.length}<button class="btn small right" id="nextEvent">Næsta atvik →</button></div>`:""}${nextBtn(5,"Áfram í lokaafurðina")}`;};
 
 V[5]=()=>{
   const f=fam(),L=allarLinur(),a=S.atvik!=null?ATVIK[S.atvik]:null,e=eytt(),s=heildarSjodur();
   const byCat=CATS.map(c=>[c,L.filter(l=>l.cat===c&&linaSamtals(l)>0)]).filter(([,x])=>x.length);
   const vantar=krofur().filter(([ok])=>!ok);
   return `
-<section class="card stack noprint"><h2>Skref 5: Kvittun og kynning</h2>
- <p class="lead">Hér er jólakvittunin ykkar. Svarið spurningunum hér fyrir neðan og notið kvittunina og svörin í stuttri kynningu fyrir bekkinn (2–3 mínútur).</p>
- ${vantar.length?`<div class="box red stack"><b>Ennþá vantar:</b><ul class="clean">${vantar.map(([,t])=>`<li>${esc(t)}</li>`).join("")}</ul><div class="row"><button class="btn ghost" data-go="3">← Aftur í jólakörfuna</button></div></div>`:`<div class="box green"><b>Allt komið!</b> Karfan uppfyllir allar kröfurnar.</div>`}
+<section class="card stack noprint"><h2>Skref 5: Lokaafurð og kynning</h2>
+ <p class="lead">Nú segið þið bekknum frá jólunum hjá fjölskyldunni ykkar. Þið veljið sjálf hvernig, en kvittunin hér fyrir neðan er grunnurinn og allt á gátlistanum þarf að koma fram.</p>
+ ${vantar.length?`<div class="box red stack"><b>Áður en þið byrjið vantar enn í körfuna:</b><ul class="clean">${vantar.map(([,t])=>`<li>${esc(t)}</li>`).join("")}</ul><div class="row"><button class="btn ghost" data-go="3">← Aftur í jólakörfuna</button></div></div>`:`<div class="box green"><b>Karfan er tilbúin!</b> Nú getið þið byrjað á lokaafurðinni.</div>`}
 </section>
-<section class="card">
+<section class="card stack noprint"><h3>1. Veljið lokaafurð</h3>
+ <div class="choices">${AFURD.map(x=>`<button class="choice" data-afurd="${x.id}" aria-pressed="${S.afurd===x.id}"><b>${x.t}</b><span>${x.d}</span></button>`).join("")}</div>
+ <p class="lead" style="font-size:15px">Þið megið vinna á blaði eða í spjaldtölvunni, t.d. í Canva, Keynote eða Book Creator.</p>
+</section>
+<section class="card stack noprint"><h3>2. Þetta verður að koma fram</h3>
+ <p class="lead">Hakið við jafnóðum og þið klárið hvert atriði.</p>
+ <div class="gat">${GAT.map((g,i)=>`<label><input type="checkbox" data-gat="${i}" ${S.gat[i]?"checked":""}><span>${esc(g)}</span></label>`).join("")}</div>
+</section>
+<section class="card stack"><h3 class="noprint">3. Jólakvittunin ykkar</h3>
+ <p class="lead noprint">Prentið kvittunina eða takið skjáskot af henni og notið hana í lokaafurðinni.</p>
  <div class="receipt">
   <h3>Jólakvittun</h3>
   <p class="c">${esc(f.nafn)}</p>
@@ -488,14 +534,22 @@ V[5]=()=>{
   <div class="r big"><span>${s-e<0?"Yfir áætlun":"Eftir"}</span><span>${kr(Math.abs(s-e))}</span></div>
   <hr><p class="c">Gleðileg jól!</p>
  </div>
+ <div class="row noprint"><button class="btn gold right" id="printBtn">Prenta kvittunina</button></div>
 </section>
-<section class="card qa"><h3>Spurningar fyrir kynninguna</h3>
- ${SPURN.map((q,i)=>`<label class="f">${i+1}. ${esc(q)}<textarea data-svar="${i}">${esc(S.svor[i])}</textarea><span class="print-answers">${esc(S.svor[i])}</span></label>`).join("")}
-</section>
-<div class="row noprint"><button class="btn gold right" id="printBtn">Prenta kvittun og svör</button></div>`;};
+<section class="cols noprint">
+ <div class="card stack"><h3>4. Kynningin</h3>
+  <ul class="clean">
+   <li>Kynningin tekur 2–3 mínútur.</li>
+   <li>Allir í hópnum segja eitthvað.</li>
+   <li>Sýnið lokaafurðina og útskýrið tölurnar.</li>
+   <li>Segið frá einu sem kom ykkur á óvart.</li>
+  </ul></div>
+ <div class="card stack"><h3>Svona verður metið</h3>
+  <ul class="clean">${MAT.map(([h,t])=>`<li><b>${h}:</b> ${t}</li>`).join("")}</ul></div>
+</section>`;};
 
 let anim=false;
-function render(){rail();$("main").innerHTML=V[S.step]();anim=false;
+function render(){$("teach").hidden=!KENNARI;$("reset").hidden=KENNARI;rail();$("main").innerHTML=V[S.step]();anim=false;
   if(S.step===2)updLeit();
   if(S.step===3||S.step===4)updKarfa();}
 
@@ -514,6 +568,9 @@ $("main").addEventListener("click",e=>{
   const d=t.closest("[data-del]");if(d){S.karfa.splice(+d.dataset.del,1);save();render();return;}
   if(t.id==="drawEvent"){S.atvik=Math.floor(Math.random()*ATVIK.length);anim=true;save();render();return;}
   if(t.id==="printBtn"){window.print();return;}
+  const af=t.closest("[data-afurd]");if(af){S.afurd=af.dataset.afurd;save();document.querySelectorAll("[data-afurd]").forEach(x=>x.setAttribute("aria-pressed",x===af));return;}
+  if(t.id==="nextFam"){S.fam=(S.fam+1)%FAM.length;render();return;}
+  if(t.id==="nextEvent"){S.atvik=(S.atvik+1)%ATVIK.length;render();return;}
 });
 $("main").addEventListener("input",e=>{
   const t=e.target;
@@ -521,7 +578,7 @@ $("main").addEventListener("input",e=>{
   if(t.id==="sjodurSvar"){S.sjodurSvar=t.value;save();return;}
   if(t.dataset.leit){const L=S.leit[t.dataset.leit];if(t.dataset.i!=null)L.v[+t.dataset.i][t.dataset.k]=t.value;else L[t.dataset.k]=t.value;save();updLeit();rail();return;}
   if(t.dataset.r!=null){S.karfa[+t.dataset.r][t.dataset.k]=t.value;save();updKarfa();rail();return;}
-  if(t.dataset.svar!=null){S.svor[+t.dataset.svar]=t.value;const p=t.nextElementSibling;if(p)p.textContent=t.value;save();return;}
+  if(t.dataset.gat!=null){S.gat[+t.dataset.gat]=t.checked;save();return;}
 });
 $("main").addEventListener("change",e=>{const t=e.target;
   if(t.dataset.r!=null&&t.dataset.k==="cat"){render();}   /* sýna/fela „handa hverjum“ */
