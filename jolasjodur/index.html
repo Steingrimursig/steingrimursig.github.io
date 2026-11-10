@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jólasjóður fjölskyldunnar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: chalkboard header (same family as Kennsluhub) → step rail → one step card at a time. Receipt step prints cleanly. */
+:root{
+  --bg:#f3efe6; --surface:#ffffff; --ink:#1d2622; --dim:#5d6a64; --line:#ddd5c6;
+  --board:#183a2f; --chalk:#f4efe2; --chalk-dim:#bcc9bf;
+  --red:#b8322a; --red-soft:#f8e1dd; --green:#1f7a45; --green-soft:#dcf1e3; --gold:#d69a1c; --gold-soft:#fbefd2;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121b17; --surface:#1b2722; --ink:#eef1ec; --dim:#a7b4ad; --line:#2f3f38;
+  --red:#ff8a7c; --red-soft:#3e1f1b; --green:#6fd394; --green-soft:#183526; --gold:#f2c35a; --gold-soft:#3a2f14; color-scheme:dark}}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--green)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:980px;margin:0 auto}
+
+header.hero{background:var(--board);color:var(--chalk);padding-block:28px 26px;
+  background-image:radial-gradient(ellipse at 15% 0%,#25553f,var(--board) 70%)}
+.hero small{display:block;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim)}
+.hero h1{font-weight:700;font-size:clamp(32px,6vw,54px);margin:4px 0 6px}
+.hero p{color:var(--chalk-dim);max-width:62ch}
+.hero .who{margin-top:10px;font-weight:800;color:var(--chalk)}
+
+nav.rail{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
+.rail .inner{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.rail button{flex:0 0 auto;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:800;cursor:pointer;white-space:nowrap}
+.rail button[aria-current="step"]{background:var(--board);color:var(--chalk);border-color:var(--board)}
+.rail button:disabled{opacity:.45;cursor:not-allowed}
+.rail .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--gold-soft);color:var(--ink);font-size:13px;margin-right:6px}
+.rail button[aria-current="step"] .n{background:var(--gold);color:#1d2622}
+
+main{padding-block:22px 70px}
+main .inner{display:flex;flex-direction:column;gap:18px}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:20px}
+.card h2{font-size:26px;margin-bottom:8px}
+.card h3{font-size:19px;margin:6px 0 6px}
+.lead{color:var(--dim);max-width:68ch}
+.stack{display:flex;flex-direction:column;gap:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+ul.clean{margin:0;padding-left:20px}
+ul.clean li{margin:3px 0}
+.box{border-radius:12px;padding:14px 16px;border:1.5px solid var(--line)}
+.box.gold{background:var(--gold-soft);border-color:transparent}
+.box.green{background:var(--green-soft);border-color:transparent}
+.box.red{background:var(--red-soft);border-color:transparent}
+.btn{border:0;border-radius:999px;padding:11px 20px;font-weight:800;cursor:pointer;background:var(--board);color:var(--chalk)}
+.btn.gold{background:var(--gold);color:#1d2622}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.small{padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.right{margin-left:auto}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:800;color:var(--dim)}
+input[type=text],input[type=number],input[inputmode],select,textarea{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0;width:100%}
+textarea{min-height:84px;resize:vertical}
+.stores{display:flex;flex-wrap:wrap;gap:8px}
+.stores a{display:inline-block;padding:6px 12px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);text-decoration:none;color:var(--ink);font-weight:700;font-size:15px}
+
+/* fjölskylduspjald */
+.famcard{border-radius:16px;overflow:hidden;border:2px solid var(--board)}
+.famcard .top{background:var(--board);color:var(--chalk);padding:14px 18px}
+.famcard .top h3{font-size:24px;margin:0}
+.famcard .top p{color:var(--chalk-dim)}
+.famcard .body{padding:16px 18px;display:grid;grid-template-columns:1fr 1.3fr;gap:18px;background:var(--surface)}
+@media (max-width:720px){.famcard .body{grid-template-columns:1fr}}
+table.money{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.money td{padding:5px 0;border-bottom:1px dashed var(--line)}
+table.money td:last-child{text-align:right;white-space:nowrap;padding-left:10px}
+table.money tr.inc td{font-weight:800;color:var(--green);border-bottom:2px solid var(--line)}
+.draw{display:grid;place-items:center;gap:14px;padding:30px 10px;text-align:center}
+.deck{width:150px;height:200px;border-radius:14px;background:repeating-linear-gradient(45deg,var(--red),var(--red) 12px,#a02a23 12px,#a02a23 24px);
+  border:6px solid var(--surface);box-shadow:0 0 0 2px var(--red),6px 6px 0 var(--line);display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:22px}
+.deck.gold{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 12px,#c58b12 12px,#c58b12 24px);box-shadow:0 0 0 2px var(--gold),6px 6px 0 var(--line)}
+.flip{animation:flip .6s ease}
+@keyframes flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+@media (prefers-reduced-motion:reduce){.flip{animation:none}}
+.msg{font-weight:800;border-radius:10px;padding:10px 14px}
+.msg.ok{background:var(--green-soft);color:var(--green)}
+.msg.bad{background:var(--red-soft);color:var(--red)}
+
+/* leit */
+.hunt{border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.hunt.done{border-color:var(--green)}
+.hunt .head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.hunt .head h3{margin:0}
+.badge{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--gold-soft)}
+.badge.ok{background:var(--green-soft);color:var(--green)}
+.prices{display:grid;grid-template-columns:28px 1fr 150px;gap:8px;align-items:center}
+.prices .num{font-weight:800;color:var(--dim);text-align:center}
+.prices .cheap input{border-color:var(--green);background:var(--green-soft)}
+.star{color:var(--green);font-weight:800;font-size:14px}
+
+/* karfa */
+.sticky-sum{position:sticky;top:58px;z-index:4}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 16px}
+.sum div{display:flex;flex-direction:column}
+.sum span{font-size:13px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.sum b{font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.sum .over b{color:var(--red)}
+.bar{grid-column:1/-1;height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);transition:width .3s}
+.bar.over i{background:var(--red)}
+.lines{display:flex;flex-direction:column;gap:10px}
+.line{display:grid;grid-template-columns:1.1fr 1.6fr 1.1fr .9fr .55fr auto;gap:8px;align-items:end;border:1.5px solid var(--line);border-radius:12px;padding:10px}
+.line .tot{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;padding-bottom:9px}
+.line .x{border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--dim);padding:6px 8px}
+.line .handa{grid-column:1/-1}
+@media (max-width:700px){.line{grid-template-columns:1fr 1fr}.line .tot{padding:0}}
+.fixed{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;background:var(--gold-soft);border-radius:12px;padding:10px 14px}
+.fixed .c{font-weight:800;min-width:150px}
+.fixed .v{flex:1 1 200px}
+.fixed .s{color:var(--dim)}
+.fixed .tot{font-weight:800;margin-left:auto;font-variant-numeric:tabular-nums}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.checks li{display:flex;gap:8px;align-items:flex-start}
+.checks li::before{content:"○";font-weight:800;color:var(--dim);width:18px;flex:none}
+.checks li.ok::before{content:"✓";color:var(--green)}
+.checks li.ok{color:var(--dim)}
+
+/* atvik */
+.event{border-radius:16px;border:2px solid var(--gold);background:var(--gold-soft);padding:20px;display:flex;flex-direction:column;gap:8px}
+.event h3{font-size:26px;margin:0}
+.event .amt{font-family:var(--display);font-size:28px;font-weight:600}
+.event .amt.minus{color:var(--red)}
+.event .amt.plus{color:var(--green)}
+
+/* kvittun */
+.receipt{max-width:460px;margin:0 auto;background:#fffdf7;color:#1d2622;border:1.5px solid #ddd5c6;border-radius:6px;padding:22px 22px 26px;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px;line-height:1.5;
+  -webkit-mask:radial-gradient(circle 7px at 50% 100%,#0000 98%,#000) 50% 100%/18px 100% repeat-x;mask:none}
+.receipt h3{font-family:var(--display);text-align:center;font-size:22px;margin:0}
+.receipt .c{text-align:center}
+.receipt hr{border:0;border-top:1.5px dashed #b9b2a3;margin:10px 0}
+.receipt .r{display:flex;justify-content:space-between;gap:10px}
+.receipt .r span:first-child{overflow:hidden;text-overflow:ellipsis}
+.receipt .r span:last-child{white-space:nowrap}
+.receipt .cat{font-weight:700;margin-top:8px;text-transform:uppercase;font-size:12.5px;letter-spacing:.06em}
+.receipt .store{color:#6b6559;font-size:12.5px}
+.receipt .big{font-weight:700;font-size:16px}
+.qa{display:flex;flex-direction:column;gap:14px}
+.print-answers{display:none}
+
+footer{padding-block:0 40px;color:var(--dim);font-size:14px}
+footer .inner{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+footer button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer;font-size:14px}
+
+@media print{
+  header.hero,nav.rail,footer,.noprint,.btn{display:none!important}
+  body{background:#fff;font-size:12pt}
+  .card{border:0;padding:0}
+  .receipt{border:1px solid #999}
+  textarea{display:none}
+  .print-answers{display:block;white-space:pre-wrap;border-left:3px solid #999;padding-left:10px;margin-top:4px}
+}
+</style>
+</head>
+<body>
+<header class="hero pad"><div class="inner">
+  <small>Stærðfræði · Hópverkefni fyrir jólin</small>
+  <h1>Jólasjóður fjölskyldunnar</h1>
+  <p>Þið fáið fjölskyldu, reiknið hvað hún hefur á milli handanna og haldið svo jólin – á netinu og innan fjárhagsáætlunar.</p>
+  <p class="who" id="whoLine" hidden></p>
+</div></header>
+
+<nav class="rail pad" aria-label="Skref"><div class="inner" id="rail"></div></nav>
+
+<main class="pad"><div class="inner" id="main"></div></main>
+
+<footer class="pad"><div class="inner">
+  <span>Svörin vistast í þessari spjaldtölvu.</span>
+  <button id="reset" class="right">Kennari: byrja upp á nýtt</button>
+</div></footer>
+
+<script>
+/* ============ GÖGN ============ */
+const FAM=[
+ {nafn:"Fjölskyldan á Hólabraut 4",
+  folk:["Mamma","Pabbi","Sara (12 ára)","Óli (8 ára)"],aukagjafir:["Amma og afi (ein sameiginleg gjöf)"],
+  laun:1002000,
+  utgjold:[["Húsnæðislán",289000],["Bílalán",54000],["Matur og heimilisvörur (venjulegur mánuður)",176000],["Rafmagn, hiti og net",31500],
+   ["Tryggingar",38000],["Bensín",32000],["Æfingagjöld (fótbolti og fimleikar)",26500],["Nesti og mötuneyti",24000],["Símar",14000],["Föt og annað",45000],["Sparnaður",60000]]},
+ {nafn:"Fjölskyldan í Lækjargötu 11",
+  folk:["Mamma","Embla (10 ára)"],aukagjafir:["Afi"],
+  laun:612000,
+  utgjold:[["Húsaleiga",238000],["Matur og heimilisvörur (venjulegur mánuður)",98000],["Rafmagn, hiti og net",22000],["Strætókort",10500],
+   ["Símar",9000],["Tryggingar",12000],["Æfingagjöld (sund)",9500],["Nesti og mötuneyti",12500],["Lyf og heilsa (tannréttingar)",18000],["Föt og annað",25000],["Námslán",22000]]},
+ {nafn:"Fjölskyldan í Melgerði 7",
+  folk:["Pabbi","Ari (13 ára)","Hekla (11 ára)","Birta (6 ára)"],aukagjafir:["Amma"],
+  laun:784000,
+  utgjold:[["Húsnæðislán",236000],["Bílalán",41000],["Matur og heimilisvörur (venjulegur mánuður)",162000],["Rafmagn, hiti og net",28000],
+   ["Tryggingar",29000],["Bensín",24000],["Æfingagjöld (handbolti, dans og sund)",34500],["Nesti og mötuneyti",36000],["Frístund",18000],["Símar",13000],["Föt og annað",38000]]},
+ {nafn:"Fjölskyldan á Sólvallagötu 2",
+  folk:["Mamma","Pabbi","Kári (11 ára)","Amma Gunna (býr hjá þeim)"],aukagjafir:["Frænka"],
+  laun:1180000,
+  utgjold:[["Húsnæðislán",334000],["Bílalán",67000],["Matur og heimilisvörur (venjulegur mánuður)",172000],["Rafmagn, hiti og net",33000],
+   ["Tryggingar",44000],["Bensín",30000],["Lyf og heilsa (lyf ömmu)",27500],["Æfingagjöld (píanó og körfubolti)",31000],["Nesti og mötuneyti",12000],["Símar",18000],["Föt og annað",48000],["Sparnaður",75000]]},
+ {nafn:"Fjölskyldan á Heiðarbraut 20",
+  folk:["Mamma","Pabbi","Ísak (13 ára)","Sól (10 ára)","Dagur (7 ára)","Lilja (3 ára)"],aukagjafir:["Amma og afi (ein sameiginleg gjöf)"],
+  laun:1248000,
+  utgjold:[["Húsnæðislán",318000],["Bílalán",72000],["Matur og heimilisvörur (venjulegur mánuður)",248000],["Rafmagn, hiti og net",39000],
+   ["Tryggingar",46000],["Bensín",41000],["Leikskóli",32000],["Æfingagjöld (fótbolti og fimleikar)",38000],["Nesti og mötuneyti",41000],["Frístund",21000],["Símar",19000],["Föt og annað",62000],["Sparnaður",40000]]},
+ {nafn:"Fjölskyldan á Ásvegi 9",
+  folk:["Pabbi","Mikael (12 ára)","Ylfa (9 ára)"],aukagjafir:["Amma og afi (ein sameiginleg gjöf)"],
+  laun:702000,
+  utgjold:[["Húsaleiga",265000],["Matur og heimilisvörur (venjulegur mánuður)",128000],["Rafmagn, hiti og net",24000],["Strætókort",10500],
+   ["Tryggingar",15000],["Æfingagjöld (skák og frjálsar íþróttir)",17500],["Nesti og mötuneyti",24000],["Lyf og heilsa (gleraugu)",14000],["Símar",12000],["Föt og annað",32000]]},
+ {nafn:"Fjölskyldan í Tjarnarbyggð 5",
+  folk:["Mamma","Pabbi","Bjarki (11 ára)","Freyja (11 ára)","Snati (hundurinn)"],aukagjafir:["Langamma"],
+  laun:1064000,
+  utgjold:[["Húsnæðislán",302000],["Bílalán",49000],["Matur og heimilisvörur (venjulegur mánuður)",181000],["Hundafóður og dýralæknir",16500],
+   ["Rafmagn, hiti og net",32000],["Tryggingar",41000],["Bensín",35000],["Æfingagjöld (fótbolti og fiðla)",33000],["Nesti og mötuneyti",24000],["Símar",17000],["Föt og annað",44000],["Sparnaður",50000]]},
+ {nafn:"Fjölskyldan á Bakkastíg 3",
+  folk:["Mamma","Pabbi","Elín (15 ára)","Emil (12 ára)","Afi (býr hjá þeim)"],aukagjafir:[],
+  laun:1012000,
+  utgjold:[["Húsnæðislán",276000],["Bílalán",38000],["Matur og heimilisvörur (venjulegur mánuður)",189000],["Rafmagn, hiti og net",31000],
+   ["Tryggingar",39000],["Bensín",29000],["Lyf og heilsa (lyf afa og tannlæknir)",24500],["Æfingagjöld (hestamennska og körfubolti)",42000],["Nesti og mötuneyti",24000],["Símar",21000],["Föt og annað",46000],["Sparnaður",60000]]}
+];
+const ATVIK=[
+ {t:"Þvottavélin bilar!",d:"Viðgerðin kostar 38.000 kr. Upphæðin dregst frá jólasjóðnum.",a:-38000},
+ {t:"Vinningur!",d:"Fjölskyldan vann 15.000 kr. í jólahappdrætti skólans. Upphæðin bætist við jólasjóðinn.",a:15000},
+ {t:"Gestir í mat",d:"Tveir góðir vinir koma óvænt í mat á aðfangadagskvöld. Bætið við mat fyrir tvo í viðbót í körfuna – passið að jólasteikin dugi fyrir alla.",a:0},
+ {t:"Ísskápurinn bilar!",d:"Það þarf að gera við ísskápinn fyrir jólin. Viðgerðin kostar 29.000 kr.",a:-29000},
+ {t:"Gjafabréf",d:"Frænka ykkar gefur fjölskyldunni 10.000 kr. gjafabréf í matvöruverslun. Upphæðin bætist við jólasjóðinn.",a:10000},
+ {t:"Jólaljósin",d:"Öll jólaljósin hækka rafmagnsreikninginn um 7.500 kr.",a:-7500},
+ {t:"Uppselt!",d:"Jólagjöfin sem þið funduð í leitinni er uppseld alls staðar. Finnið aðra gjöf á svipuðu verði og breytið körfunni.",a:0},
+ {t:"Afsláttur!",d:"Ein verslun er með 20% afslátt af leikföngum og spilum. Finnið eina gjöf þar, reiknið nýja verðið og setjið það í körfuna.",a:0},
+ {t:"Mótsgjald",d:"Eitt barnið kemst á íþróttamót í janúar. Mótsgjaldið, 18.000 kr., þarf að greiða strax.",a:-18000},
+ {t:"Jólabónus",d:"Vinnustaður foreldris gefur 25.000 kr. jólabónus. Upphæðin bætist við jólasjóðinn.",a:25000},
+ {t:"Brotinn skjár",d:"Sími foreldris dettur í gólfið og skjárinn brotnar. Viðgerðin kostar 24.000 kr.",a:-24000},
+ {t:"Óvæntur gestur",d:"Frændi ykkar kemur heim frá útlöndum og verður hjá ykkur um jólin. Hann þarf líka jólagjöf! Hann hefur bæst við gjafalistann.",a:0,nyr:"Frændi"}
+];
+const LEIT=[
+ {id:"kjot",t:"Jólasteikin",cat:"Jólamatur",d:"Veljið hvað fjölskyldan borðar á aðfangadagskvöld, t.d. hamborgarhrygg, lambalæri, kalkún eða hnetusteik. Reiknið með um 350 g á mann og skrifið verðið fyrir allt magnið sem þið þurfið."},
+ {id:"mand",t:"Mandarínur",cat:"Sætindi og ávextir",d:"Einn kassi af mandarínum."},
+ {id:"konf",t:"Konfekt",cat:"Sætindi og ávextir",d:"Einn konfektkassi. Berið saman sömu stærð af kassa."},
+ {id:"ol",t:"Jólaöl",cat:"Drykkir",d:"Nóg jólaöl fyrir alla á aðfangadagskvöld. Reiknið með um hálfum lítra á mann."},
+ {id:"gjof",t:"Ein jólagjöf",cat:"Gjafir",d:"Veljið eina gjöf og finnið nákvæmlega sömu vöru í þremur verslunum.",gjof:true}
+];
+const CATS=["Jólamatur","Meðlæti","Eftirréttur","Sætindi og ávextir","Drykkir","Gjafir","Skraut og annað"];
+const BUDIR=["Bónus","Krónan","Nettó","Hagkaup","Heimkaup","Fjarðarkaup","Elko","Penninn Eymundsson","A4","Rúmfatalagerinn","Byko","Húsasmiðjan","Útilíf","Kids Coolshop"];
+const TENGLAR=[["Krónan","https://kronan.is"],["Nettó","https://netto.is"],["Hagkaup","https://hagkaup.is"],["Heimkaup","https://heimkaup.is"],["Bónus","https://bonus.is"],["Elko","https://elko.is"],["Penninn Eymundsson","https://penninn.is"],["A4","https://a4.is"]];
+const STEPS=["Byrjum","Fjölskyldan","Finnið ódýrast","Jólakarfan","Óvænt atvik","Kvittun"];
+const SPURN=[
+ "Hvað kostuðu jólin hjá fjölskyldunni ykkar samtals og hvað var mikið eftir í jólasjóðnum?",
+ "Í hvaða verslunum fannst ykkur ódýrast að versla? Kom eitthvað verð ykkur á óvart?",
+ "Hverju þurftuð þið að sleppa eða breyta til að halda ykkur innan fjárhagsáætlunar?",
+ "Hvaða áhrif hafði óvænta atvikið á jólin ykkar?",
+ "Ef fjölskyldan hefði haft 50.000 kr. minna, hverju hefðuð þið sleppt?"
+];
+
+/* ============ STAÐA ============ */
+const KEY="jolasjodur-v1";
+const fresh=()=>({step:0,hopur:"",nofn:"",fam:null,sjodurSvar:"",sjodurOk:false,tilraunir:0,
+  leit:Object.fromEntries(LEIT.map(l=>[l.id,{vara:"",handa:"",v:[{b:"",p:""},{b:"",p:""},{b:"",p:""}]}])),
+  karfa:[],atvik:null,svor:SPURN.map(()=>"")});
+let S=fresh();
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(fresh(),JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+/* ============ HJÁLP ============ */
+const kr=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,".")+" kr.";
+const num=s=>{const v=parseFloat(String(s??"").replace(/\s|\./g,"").replace(",","."));return isFinite(v)?v:NaN;};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=id=>document.getElementById(id);
+const fam=()=>S.fam==null?null:FAM[S.fam];
+const utgjold=f=>f.utgjold.reduce((a,u)=>a+u[1],0);
+const sjodur=()=>fam()?fam().laun-utgjold(fam()):0;
+const atvikUpph=()=>S.atvik==null?0:ATVIK[S.atvik].a;
+const heildarSjodur=()=>sjodur()+atvikUpph();
+const vidtakendur=()=>{const f=fam();if(!f)return[];const l=[...f.folk,...f.aukagjafir];if(S.atvik!=null&&ATVIK[S.atvik].nyr)l.push(ATVIK[S.atvik].nyr);return l;};
+function odyrast(id){const L=S.leit[id];let best=null;
+  L.v.forEach((r,i)=>{const p=num(r.p);if(r.b.trim()&&p>0&&(best==null||p<num(L.v[best].p)))best=i;});
+  return best;}
+const leitBuin=id=>{const L=S.leit[id];return L.vara.trim()&&L.v.every(r=>r.b.trim()&&num(r.p)>0)&&(!LEIT.find(l=>l.id===id).gjof||L.handa);};
+function allarLinur(){
+  const out=[];
+  for(const l of LEIT){if(!leitBuin(l.id))continue;const L=S.leit[l.id],i=odyrast(l.id);
+    out.push({cat:l.cat,vara:L.vara,b:L.v[i].b,verd:num(L.v[i].p),magn:1,handa:L.handa,leit:true});}
+  for(const k of S.karfa)out.push({...k,verd:num(k.verd),magn:num(k.magn)||0});
+  return out;}
+const linaSamtals=l=>(isFinite(l.verd)?l.verd:0)*(isFinite(l.magn)?l.magn:0);
+const eytt=()=>allarLinur().reduce((a,l)=>a+linaSamtals(l),0);
+function opinn(i){
+  if(i<=1)return true;
+  if(!S.sjodurOk)return false;
+  if(i<=3)return true;
+  if(i===4)return allarLinur().length>=6;
+  return S.atvik!=null;}
+
+/* ============ TEIKNING ============ */
+function rail(){
+  $("rail").innerHTML=STEPS.map((s,i)=>`<button data-step="${i}" ${S.step===i?'aria-current="step"':""} ${opinn(i)?"":"disabled"}><span class="n">${i}</span>${s}</button>`).join("");
+  const w=$("whoLine");
+  if(S.hopur||S.nofn){w.hidden=false;w.textContent=[S.hopur,S.nofn].filter(Boolean).join(" · ");}else w.hidden=true;
+}
+function go(i){if(!opinn(i))return;S.step=i;save();render();window.scrollTo({top:0,behavior:"smooth"});}
+function nextBtn(i,txt){return `<div class="row noprint"><button class="btn gold right" data-go="${i}" ${opinn(i)?"":"disabled"}>${txt||"Áfram"} →</button></div>`;}
+
+const V=[];
+V[0]=()=>`
+<section class="card stack">
+  <h2>Ræðið saman</h2>
+  <p class="lead">Hvað kostar að halda jól? Fyrir jólin kaupum við ýmislegt sem við kaupum ekki í hverjum mánuði: gjafir, mat, nammi, mandarínur, kökur og kræsingar. Nú eigið þið að halda jól!</p>
+</section>
+<section class="cols">
+  <div class="card stack">
+    <h3>Í þessu verkefni lærið þið</h3>
+    <ul class="clean">
+      <li>að gera fjárhagsáætlun og halda ykkur innan hennar,</li>
+      <li>hvar og hvernig við verslum á netinu,</li>
+      <li>að vinna saman í hóp,</li>
+      <li>að halda tímaáætlun og klára verkefnið á tilsettum tíma,</li>
+      <li>að vanda ykkur og setja upplýsingar fram á skýran og skemmtilegan hátt.</li>
+    </ul>
+  </div>
+  <div class="card stack">
+    <h3>Munið</h3>
+    <p>Fjölskyldur hafa mismiklar tekjur og sumar hafa meira á milli handanna en aðrar. Kostnaður getur líka verið mjög misjafn á milli fjölskyldna, til dæmis vegna:</p>
+    <ul class="clean"><li>lyfja og heilsu</li><li>æfingagjalda</li><li>fjölda barna og foreldra</li><li>bílalána og húsnæðislána</li><li>nestis</li></ul>
+  </div>
+</section>
+<section class="card stack">
+  <h3>Tímaáætlun</h3>
+  <div class="cols">
+    <div class="box gold"><b>1. kennslustund</b><br>Skref 1 og 2: Fjölskyldan og leitin að ódýrasta verðinu.</div>
+    <div class="box gold"><b>2. kennslustund</b><br>Skref 3 og 4: Jólakarfan og óvænta atvikið.</div>
+  </div>
+  <div class="box gold"><b>3. kennslustund</b><br>Skref 5: Kvittunin tilbúin og stutt kynning fyrir bekkinn.</div>
+</section>
+<section class="card stack">
+  <h3>Hópurinn</h3>
+  <div class="cols">
+    <label class="f">Nafn hópsins<input type="text" id="hopur" value="${esc(S.hopur)}" placeholder="t.d. Jólasveinarnir"></label>
+    <label class="f">Hverjir eru í hópnum?<input type="text" id="nofn" value="${esc(S.nofn)}" placeholder="Nöfn allra í hópnum"></label>
+  </div>
+</section>
+${nextBtn(1,"Byrjum")}`;
+
+V[1]=()=>{
+  const f=fam();
+  if(!f)return `<section class="card"><h2>Skref 1: Fjölskyldan ykkar</h2>
+   <p class="lead">Hver hópur fær eina fjölskyldu. Hún hefur sínar tekjur og sín föstu útgjöld, alveg eins og alvörufjölskyldur.</p>
+   <div class="draw"><div class="deck">Fjölskylda</div><button class="btn" id="drawFam">Draga fjölskylduspjald</button></div></section>`;
+  const rows=f.utgjold.map(u=>`<tr><td>${esc(u[0])}</td><td>− ${kr(u[1])}</td></tr>`).join("");
+  return `<section class="card stack"><h2>Skref 1: Fjölskyldan ykkar</h2>
+   <div class="famcard${anim?" flip":""}"><div class="top"><h3>${esc(f.nafn)}</h3><p>${f.folk.length} í heimili</p></div>
+    <div class="body">
+     <div class="stack"><div><h3>Heimilisfólk</h3><ul class="clean">${f.folk.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>
+      <div><h3>Gjafir líka handa</h3>${f.aukagjafir.length?`<ul class="clean">${f.aukagjafir.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:"<p>Engum utan heimilisins.</p>"}</div></div>
+     <div><h3>Desember</h3><table class="money"><tr class="inc"><td>Laun eftir skatt</td><td>${kr(f.laun)}</td></tr>${rows}</table></div>
+    </div></div>
+   <div class="box gold stack">
+    <b>Verkefni: Hvað er mikið eftir í jólasjóðinn?</b>
+    <p>Dragið öll föstu útgjöldin frá laununum. Það sem er eftir er jólasjóðurinn ykkar. Reiknið saman og skrifið svarið.</p>
+    <div class="row"><input type="text" inputmode="numeric" id="sjodurSvar" value="${esc(S.sjodurSvar)}" placeholder="Svar í krónum" style="max-width:220px" ${S.sjodurOk?"disabled":""}>
+     ${S.sjodurOk?"":`<button class="btn" id="checkSjodur">Athuga</button>`}</div>
+    <div id="sjodurMsg">${S.sjodurOk?`<p class="msg ok">Rétt! Jólasjóðurinn ykkar er ${kr(sjodur())}</p>`:""}</div>
+   </div></section>${nextBtn(2)}`;
+};
+
+V[2]=()=>`
+<section class="card stack"><h2>Skref 2: Finnið ódýrast</h2>
+ <p class="lead">Skoðið verð á netinu og finnið hvar þessar vörur eru ódýrastar. Skráið verðið í <b>þremur</b> verslunum fyrir hverja vöru. Ódýrasta verðið fer sjálfkrafa í jólakörfuna.</p>
+ <div class="stores">${TENGLAR.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${n} ↗</a>`).join("")}</div>
+ <p class="lead" style="font-size:15px">Ef verðið sést ekki á vef einnar verslunar, prófið þá aðra.</p>
+</section>
+${LEIT.map(l=>{const L=S.leit[l.id];return `
+<section class="hunt" id="hunt-${l.id}">
+ <div class="head"><h3>${l.t}</h3><span class="badge" id="badge-${l.id}"></span></div>
+ <p class="lead">${l.d}</p>
+ <div class="cols"><label class="f">Hvaða vöru völduð þið?<input type="text" data-leit="${l.id}" data-k="vara" value="${esc(L.vara)}" placeholder="Vöruheiti og magn"></label>
+ ${l.gjof?`<label class="f">Handa hverjum?<select data-leit="${l.id}" data-k="handa"><option value="">Veljið…</option>${vidtakendur().map(p=>`<option${p===L.handa?" selected":""}>${esc(p)}</option>`).join("")}</select></label>`:""}</div>
+ <div class="prices">${L.v.map((r,i)=>`<span class="num">${i+1}</span>
+  <input type="text" list="budir" data-leit="${l.id}" data-i="${i}" data-k="b" value="${esc(r.b)}" placeholder="Verslun" aria-label="Verslun ${i+1}">
+  <input type="text" inputmode="numeric" data-leit="${l.id}" data-i="${i}" data-k="p" value="${esc(r.p)}" placeholder="Verð (kr.)" aria-label="Verð ${i+1}">`).join("")}</div>
+ <p class="star" id="star-${l.id}"></p>
+</section>`;}).join("")}
+<datalist id="budir">${BUDIR.map(b=>`<option value="${b}">`).join("")}</datalist>
+${nextBtn(3)}`;
+
+function updLeit(){for(const l of LEIT){const done=leitBuin(l.id),i=odyrast(l.id),el=$("hunt-"+l.id);if(!el)continue;
+  el.classList.toggle("done",!!done);
+  $("badge-"+l.id).className="badge"+(done?" ok":"");$("badge-"+l.id).textContent=done?"Komið í körfuna":"Vantar";
+  el.querySelectorAll("[data-i]").forEach(inp=>{inp.style.borderColor="";inp.style.background="";});
+  if(i!=null)el.querySelectorAll(`[data-i="${i}"]`).forEach(inp=>{inp.style.borderColor="var(--green)";inp.style.background="var(--green-soft)";});
+  $("star-"+l.id).textContent=i!=null?`Ódýrast hingað til: ${S.leit[l.id].v[i].b} – ${kr(num(S.leit[l.id].v[i].p))}`:"";}}
+
+V[3]=()=>{
+  const fixed=allarLinur().filter(l=>l.leit);
+  return `
+<div class="sticky-sum noprint" id="sumbox"></div>
+<section class="card stack"><h2>Skref 3: Jólakarfan</h2>
+ <p class="lead">Nú setjið þið saman jólin. Vörurnar úr leitinni eru þegar komnar í körfuna. Bætið við því sem vantar, finnið verðin á netinu og passið að fara ekki yfir jólasjóðinn.</p>
+ <div class="box"><h3>Það sem þarf að vera í körfunni</h3><ul class="checks" id="checks"></ul></div>
+</section>
+<section class="card stack">
+ <h3>Úr leitinni</h3>
+ <div class="lines">${fixed.length?fixed.map(l=>`<div class="fixed"><span class="c">${esc(l.cat)}</span><span class="v">${esc(l.vara)}${l.handa?` – handa ${esc(l.handa)}`:""}</span><span class="s">${esc(l.b)}</span><span class="tot">${kr(l.verd)}</span></div>`).join(""):`<p class="lead">Engin vara er komin úr leitinni enn. Klárið skref 2.</p>`}</div>
+ <h3 style="margin-top:10px">Annað í körfuna</h3>
+ <div class="lines" id="lines">${S.karfa.map((k,i)=>lineHtml(k,i)).join("")}</div>
+ <div class="row"><button class="btn" id="addLine">+ Bæta við vöru</button></div>
+</section>
+<datalist id="budir">${BUDIR.map(b=>`<option value="${b}">`).join("")}</datalist>
+${nextBtn(4,"Draga óvænt atvik")}`;};
+function lineHtml(k,i){return `<div class="line" data-row="${i}">
+ <label class="f">Flokkur<select data-r="${i}" data-k="cat">${CATS.map(c=>`<option${c===k.cat?" selected":""}>${c}</option>`).join("")}</select></label>
+ <label class="f">Vara<input type="text" data-r="${i}" data-k="vara" value="${esc(k.vara)}" placeholder="t.d. rauðkál"></label>
+ <label class="f">Verslun<input type="text" list="budir" data-r="${i}" data-k="b" value="${esc(k.b)}"></label>
+ <label class="f">Verð á stk.<input type="text" inputmode="numeric" data-r="${i}" data-k="verd" value="${esc(k.verd)}"></label>
+ <label class="f">Fjöldi<input type="text" inputmode="numeric" data-r="${i}" data-k="magn" value="${esc(k.magn)}"></label>
+ <div class="row" style="gap:2px;flex-wrap:nowrap"><span class="tot" id="tot-${i}">${kr(linaSamtals({verd:num(k.verd),magn:num(k.magn)}))}</span><button class="x" data-del="${i}" aria-label="Eyða línu">×</button></div>
+ ${k.cat==="Gjafir"?`<label class="f handa">Handa hverjum?<select data-r="${i}" data-k="handa"><option value="">Veljið…</option>${vidtakendur().map(p=>`<option${p===k.handa?" selected":""}>${esc(p)}</option>`).join("")}</select></label>`:""}
+</div>`;}
+function sumHtml(){const s=heildarSjodur(),e=eytt(),eft=s-e,over=eft<0,pct=s>0?Math.min(100,e/s*100):100;
+  return `<div class="sum"><div><span>Jólasjóður</span><b>${kr(s)}</b></div><div><span>Búið að eyða</span><b>${kr(e)}</b></div>
+   <div class="${over?"over":""}"><span>${over?"Yfir!":"Eftir"}</span><b>${kr(Math.abs(eft))}</b></div>
+   <div class="bar${over?" over":""}"><i style="width:${over?100:pct}%"></i></div></div>`;}
+function krofur(){
+  const L=allarLinur(),n=c=>L.filter(l=>l.cat===c&&l.vara&&l.vara.trim()&&linaSamtals(l)>0).length;
+  const gjafir=new Set(L.filter(l=>l.cat==="Gjafir"&&l.handa).map(l=>l.handa));
+  const out=[
+   [leitBuin("kjot"),"Jólasteik (úr skrefi 2)"],
+   [n("Meðlæti")>=2,`Að minnsta kosti tvenns konar meðlæti (komið: ${n("Meðlæti")})`],
+   [n("Eftirréttur")>=1,"Eftirréttur"],
+   [n("Sætindi og ávextir")>=3,`Mandarínur, konfekt og eitthvað fleira sætt, t.d. smákökur (komið: ${n("Sætindi og ávextir")})`],
+   [n("Drykkir")>=1,"Drykkir"]];
+  for(const p of vidtakendur())out.push([gjafir.has(p),`Gjöf handa: ${p}`]);
+  out.push([heildarSjodur()-eytt()>=0,"Innan jólasjóðsins"]);
+  return out;}
+function updKarfa(){const sb=$("sumbox");if(sb)sb.innerHTML=sumHtml();
+  const c=$("checks");if(c)c.innerHTML=krofur().map(([ok,t])=>`<li class="${ok?"ok":""}">${esc(t)}</li>`).join("");
+  S.karfa.forEach((k,i)=>{const t=$("tot-"+i);if(t)t.textContent=kr(linaSamtals({verd:num(k.verd),magn:num(k.magn)}));});}
+
+V[4]=()=>{
+  if(S.atvik==null)return `<div class="sticky-sum noprint" id="sumbox"></div><section class="card"><h2>Skref 4: Óvænt atvik</h2>
+   <p class="lead">Lífið fer ekki alltaf eftir áætlun! Dragið spjald og sjáið hvað gerist hjá fjölskyldunni ykkar.</p>
+   <div class="draw"><div class="deck gold">?</div><button class="btn gold" id="drawEvent">Draga atvikaspjald</button></div></section>`;
+  const a=ATVIK[S.atvik];
+  return `<div class="sticky-sum noprint" id="sumbox"></div>
+  <section class="card stack"><h2>Skref 4: Óvænt atvik</h2>
+   <div class="event${anim?" flip":""}"><h3>${esc(a.t)}</h3><p>${esc(a.d)}</p>
+    ${a.a?`<div class="amt ${a.a<0?"minus":"plus"}">${a.a<0?"−":"+"} ${kr(Math.abs(a.a))}</div>`:""}</div>
+   <div class="box stack"><b>Hvað þurfið þið að gera?</b>
+    <p>${a.a<0?"Jólasjóðurinn hefur minnkað. Ef þið eruð komin yfir þurfið þið að fara aftur í jólakörfuna og finna ódýrari vörur eða sleppa einhverju."
+      :a.a>0?"Jólasjóðurinn hefur stækkað. Ræðið saman hvort þið viljið nota peninginn eða geyma hann."
+      :"Farið aftur í jólakörfuna og gerið breytingarnar sem spjaldið segir til um."}</p>
+    <div class="row"><button class="btn ghost" data-go="3">← Aftur í jólakörfuna</button></div></div>
+  </section>${nextBtn(5,"Klára kvittunina")}`;};
+
+V[5]=()=>{
+  const f=fam(),L=allarLinur(),a=S.atvik!=null?ATVIK[S.atvik]:null,e=eytt(),s=heildarSjodur();
+  const byCat=CATS.map(c=>[c,L.filter(l=>l.cat===c&&linaSamtals(l)>0)]).filter(([,x])=>x.length);
+  const vantar=krofur().filter(([ok])=>!ok);
+  return `
+<section class="card stack noprint"><h2>Skref 5: Kvittun og kynning</h2>
+ <p class="lead">Hér er jólakvittunin ykkar. Svarið spurningunum hér fyrir neðan og notið kvittunina og svörin í stuttri kynningu fyrir bekkinn (2–3 mínútur).</p>
+ ${vantar.length?`<div class="box red stack"><b>Ennþá vantar:</b><ul class="clean">${vantar.map(([,t])=>`<li>${esc(t)}</li>`).join("")}</ul><div class="row"><button class="btn ghost" data-go="3">← Aftur í jólakörfuna</button></div></div>`:`<div class="box green"><b>Allt komið!</b> Karfan uppfyllir allar kröfurnar.</div>`}
+</section>
+<section class="card">
+ <div class="receipt">
+  <h3>Jólakvittun</h3>
+  <p class="c">${esc(f.nafn)}</p>
+  <p class="c">${esc([S.hopur,S.nofn].filter(Boolean).join(" · "))}</p>
+  <hr>
+  ${byCat.map(([c,x])=>`<div class="cat">${esc(c)}</div>${x.map(l=>`<div class="r"><span>${esc(l.vara)}${l.magn>1?` ×${l.magn}`:""}</span><span>${kr(linaSamtals(l))}</span></div><div class="store">${esc(l.b||"")}${l.handa?` · handa ${esc(l.handa)}`:""}</div>`).join("")}`).join("")}
+  <hr>
+  <div class="r"><span>Jólasjóður</span><span>${kr(sjodur())}</span></div>
+  ${a&&a.a?`<div class="r"><span>Óvænt: ${esc(a.t.replace("!",""))}</span><span>${a.a<0?"−":"+"} ${kr(Math.abs(a.a))}</span></div>`:""}
+  <div class="r"><span>Samtals keypt</span><span>− ${kr(e)}</span></div>
+  <hr>
+  <div class="r big"><span>${s-e<0?"Yfir áætlun":"Eftir"}</span><span>${kr(Math.abs(s-e))}</span></div>
+  <hr><p class="c">Gleðileg jól!</p>
+ </div>
+</section>
+<section class="card qa"><h3>Spurningar fyrir kynninguna</h3>
+ ${SPURN.map((q,i)=>`<label class="f">${i+1}. ${esc(q)}<textarea data-svar="${i}">${esc(S.svor[i])}</textarea><span class="print-answers">${esc(S.svor[i])}</span></label>`).join("")}
+</section>
+<div class="row noprint"><button class="btn gold right" id="printBtn">Prenta kvittun og svör</button></div>`;};
+
+let anim=false;
+function render(){rail();$("main").innerHTML=V[S.step]();anim=false;
+  if(S.step===2)updLeit();
+  if(S.step===3||S.step===4)updKarfa();}
+
+/* ============ ATBURÐIR ============ */
+$("rail").addEventListener("click",e=>{const b=e.target.closest("[data-step]");if(b)go(+b.dataset.step);});
+$("main").addEventListener("click",e=>{
+  const t=e.target;
+  const g=t.closest("[data-go]");if(g){go(+g.dataset.go);return;}
+  if(t.id==="drawFam"){S.fam=Math.floor(Math.random()*FAM.length);anim=true;save();render();return;}
+  if(t.id==="checkSjodur"){const v=num($("sjodurSvar").value);S.sjodurSvar=$("sjodurSvar").value;S.tilraunir++;
+    if(v===sjodur()){S.sjodurOk=true;save();render();}
+    else{save();$("sjodurMsg").innerHTML=`<p class="msg bad">Ekki alveg. ${S.tilraunir>=2?"Ábending: Leggið fyrst öll útgjöldin saman og dragið svo summuna frá laununum.":"Reiknið aftur og munið að draga <b>öll</b> útgjöldin frá."}</p>`;}
+    return;}
+  if(t.id==="addLine"){S.karfa.push({cat:"Meðlæti",vara:"",b:"",verd:"",magn:"1",handa:""});save();render();
+    const ins=document.querySelectorAll('#lines [data-k="vara"]');if(ins.length)ins[ins.length-1].focus();return;}
+  const d=t.closest("[data-del]");if(d){S.karfa.splice(+d.dataset.del,1);save();render();return;}
+  if(t.id==="drawEvent"){S.atvik=Math.floor(Math.random()*ATVIK.length);anim=true;save();render();return;}
+  if(t.id==="printBtn"){window.print();return;}
+});
+$("main").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="hopur"||t.id==="nofn"){S[t.id]=t.value;save();rail();return;}
+  if(t.id==="sjodurSvar"){S.sjodurSvar=t.value;save();return;}
+  if(t.dataset.leit){const L=S.leit[t.dataset.leit];if(t.dataset.i!=null)L.v[+t.dataset.i][t.dataset.k]=t.value;else L[t.dataset.k]=t.value;save();updLeit();rail();return;}
+  if(t.dataset.r!=null){S.karfa[+t.dataset.r][t.dataset.k]=t.value;save();updKarfa();rail();return;}
+  if(t.dataset.svar!=null){S.svor[+t.dataset.svar]=t.value;const p=t.nextElementSibling;if(p)p.textContent=t.value;save();return;}
+});
+$("main").addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.r!=null&&t.dataset.k==="cat"){render();}   /* sýna/fela „handa hverjum“ */
+});
+$("main").addEventListener("keydown",e=>{if(e.target.id==="sjodurSvar"&&e.key==="Enter")$("checkSjodur")?.click();});
+$("reset").addEventListener("click",e=>{const b=e.currentTarget;
+  if(b.dataset.sure){S=fresh();save();delete b.dataset.sure;b.textContent="Kennari: byrja upp á nýtt";render();window.scrollTo(0,0);}
+  else{b.dataset.sure="1";b.textContent="Ertu viss? Allt hjá hópnum eyðist. Smelltu aftur.";setTimeout(()=>{if(b.dataset.sure){delete b.dataset.sure;b.textContent="Kennari: byrja upp á nýtt";}},5000);}});
+render();
+</script>
+</body>
+</html>
