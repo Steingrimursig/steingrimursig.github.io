@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Puffling Mystery – enskuverkefni</title>
+<script src="/skil.js"></script>
+<style>
+:root{--navy:#14213d;--sea:#1d3557;--foam:#eef3f7;--paper:#fffdf7;--orange:#f2762e;--orange-d:#c85a1b;--yellow:#ffd166;--green:#2a9d8f;--green-l:#e3f4f1;--red:#d1495b;--red-l:#fbe9ec;--ink:#1f2937;--muted:#64748b;--line:#dde3ea}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--foam);line-height:1.55}
+header{background:linear-gradient(160deg,var(--navy),var(--sea));color:#fff;padding:18px 20px 0}
+.hwrap{max-width:980px;margin:0 auto}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.6rem;letter-spacing:.3px}
+.top .sub{opacity:.8;font-size:.92rem}
+.who{margin-left:auto;font-size:.9rem;opacity:.9;text-align:right}
+.stamps{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.stamp{font-size:.75rem;padding:3px 10px;border-radius:999px;border:1px dashed rgba(255,255,255,.45);opacity:.6}
+.stamp.on{background:var(--yellow);color:var(--navy);border:1px solid var(--yellow);opacity:1;font-weight:700}
+nav{display:flex;gap:4px;margin-top:14px;overflow-x:auto}
+nav button{background:transparent;border:0;color:#cbd5e1;padding:10px 14px;font:inherit;font-weight:600;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap}
+nav button.active{background:var(--foam);color:var(--navy)}
+main{max-width:980px;margin:0 auto;padding:20px}
+.tab{display:none}.tab.active{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+.card h2{margin:0 0 10px;font-size:1.25rem;color:var(--navy)}
+.card h3{margin:16px 0 8px;font-size:1.05rem;color:var(--navy)}
+.story{background:var(--paper)}
+.story .txt{font-family:Georgia,"Times New Roman",serif;font-size:1.1rem;line-height:1.8}
+.story .txt p{margin:0 0 14px}
+.gloss{background:#f6f1e4;border-radius:10px;padding:10px 14px;font-size:.9rem;margin-top:8px}
+.gloss b{color:var(--orange-d)}
+.gloss span{display:inline-block;margin:2px 14px 2px 0}
+.lock{text-align:center;color:var(--muted);padding:34px 20px;border:2px dashed var(--line);border-radius:14px;margin-bottom:18px;background:#fff}
+.lock b{display:block;font-size:1.15rem;color:var(--navy);margin-bottom:4px}
+.rule{background:#eef6ff;border-left:4px solid var(--sea);padding:10px 14px;border-radius:0 10px 10px 0;margin:0 0 14px;font-size:.95rem}
+.bonus{border:2px solid var(--orange)}
+.bonus h2{color:var(--orange-d)}
+.item{padding:12px 14px;border-radius:10px;margin-bottom:8px;border:1px solid transparent}
+.item.good{background:var(--green-l);border-color:#b7e2db}
+.item.bad{background:var(--red-l);border-color:#f2c4cc}
+.item.part{background:#fff6e0;border-color:#f3dd9c}
+.q{margin:0 0 8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:inherit;padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:#fff;cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--sea)}
+.opt.sel{border-color:var(--sea);background:var(--sea);color:#fff}
+.opt.right{outline:3px solid var(--green);outline-offset:1px}
+.opt:disabled{cursor:default}
+input.gap,select.sel{font:inherit;padding:4px 8px;border:1.5px solid var(--line);border-radius:7px;background:#fff;min-width:110px}
+input.gap{width:150px}
+input.gap:focus,select.sel:focus,textarea:focus{outline:none;border-color:var(--orange)}
+.hint{color:var(--muted);font-size:.9rem}
+.fb{font-size:.9rem;margin-top:6px;color:#9b2c3d}
+.fb.ok{color:#1d7c70}
+.tokens{display:flex;flex-wrap:wrap;gap:6px}
+.tok{font:inherit;padding:6px 11px;border-radius:8px;border:1.5px solid var(--line);background:#fff;cursor:pointer}
+.tok:hover:not(:disabled){border-color:var(--orange)}
+.tok.sel{background:var(--orange);border-color:var(--orange);color:#fff}
+.tok.wrong{background:var(--red);border-color:var(--red);color:#fff}
+.tok.used{opacity:.25}
+.tok.block{display:block;width:100%;text-align:left}
+.buildarea{min-height:44px;border:2px dashed var(--line);border-radius:10px;padding:6px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.buildarea.col{flex-direction:column;align-items:stretch}
+.buildarea .ph{color:var(--muted);font-size:.9rem;padding:4px}
+.small{font-size:.85rem;color:var(--muted)}
+.mrow{display:flex;align-items:center;gap:10px;margin:5px 0;flex-wrap:wrap}
+.mrow .en{min-width:110px;font-weight:600}
+textarea{width:100%;font:inherit;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;resize:vertical;min-height:90px;line-height:1.6}
+textarea.big{min-height:260px}
+.wc{font-size:.85rem;color:var(--muted);margin-top:4px}
+.wc.ok{color:#1d7c70;font-weight:600}
+.btn{font:inherit;font-weight:600;padding:9px 18px;border-radius:10px;border:1.5px solid var(--sea);background:#fff;color:var(--sea);cursor:pointer}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.primary:hover{background:var(--orange-d)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.checkrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.warn{color:var(--orange-d);font-size:.9rem}
+.result{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--navy);color:#fff}
+.result b{color:var(--yellow)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:14px}
+.choice{border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:#fff;text-align:left;font:inherit}
+.choice b{display:block;color:var(--navy);margin-bottom:4px}
+.choice.sel{border-color:var(--orange);background:#fff5ee}
+.checks label{display:block;margin:4px 0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+.step{background:var(--foam);border-radius:12px;padding:12px 14px;font-size:.93rem}
+.step b{display:block;color:var(--navy)}
+.field{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.field input{font:inherit;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;min-width:220px}
+.selfrow{padding:10px 0;border-bottom:1px solid var(--line)}
+.selfrow:last-child{border:0}
+.lv{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.lv button{font:inherit;font-size:.88rem;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:#fff;cursor:pointer}
+.lv button.sel{background:var(--green);border-color:var(--green);color:#fff}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--foam)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;min-width:120px}
+.bar i{display:block;height:100%;background:var(--green)}
+.key li{margin:2px 0}
+.case-closed{background:var(--yellow);color:var(--navy);border-radius:14px;padding:16px 20px;font-weight:700;margin-bottom:18px;text-align:center;font-size:1.1rem}
+#print{display:none}
+@media (max-width:600px){main{padding:12px}.card{padding:16px}.who{margin-left:0;text-align:left}}
+@media print{
+  header,main{display:none!important}
+  #print{display:block;font-family:Georgia,serif;font-size:11pt;color:#000}
+  #print h1{font-size:18pt;margin:0 0 4px}
+  #print h2{font-size:13pt;margin:18px 0 6px;border-bottom:1px solid #999}
+  #print .pre{white-space:pre-wrap;border:1px solid #ccc;padding:8px;border-radius:4px}
+  #print table{font-size:9.5pt}
+  #print th,#print td{border:1px solid #888}
+  .pb{page-break-before:always}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="hwrap">
+  <div class="top">
+   <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="32" cy="38" rx="17" ry="21" fill="#111"/>
+    <ellipse cx="34" cy="42" rx="11" ry="15" fill="#fff"/>
+    <circle cx="32" cy="20" r="13" fill="#111"/>
+    <ellipse cx="34" cy="21" rx="8" ry="7" fill="#e9eef2"/>
+    <circle cx="35" cy="19" r="2.2" fill="#111"/>
+    <path d="M42 17 L56 22 L42 28 Z" fill="#f2762e"/>
+    <path d="M45 18.5 L45 26.5" stroke="#ffd166" stroke-width="1.6"/>
+    <path d="M26 58 l-4 4 h9 z M38 58 l-1 4 h9 z" fill="#f2762e"/>
+   </svg>
+   <div>
+    <h1>The Puffling Mystery</h1>
+    <div class="sub">Enskuverkefni – lesskilningur, málfræði, ritun og námsmat</div>
+   </div>
+   <div class="who" id="who"></div>
+  </div>
+  <div class="stamps" id="stamps"></div>
+  <nav id="nav">
+   <button data-tab="start" class="active">Byrjun</button>
+   <button data-tab="read">1. Saga og lesskilningur</button>
+   <button data-tab="gram">2. Málfræði</button>
+   <button data-tab="write">3. Ritun</button>
+   <button data-tab="assess">4. Námsmat</button>
+   <button data-tab="teacher" id="teacherTabBtn" style="display:none">Kennari</button>
+  </nav>
+ </div>
+</header>
+
+<main>
+ <section class="tab active" id="tab-start"></section>
+ <section class="tab" id="tab-read"></section>
+ <section class="tab" id="tab-gram"></section>
+ <section class="tab" id="tab-write"></section>
+ <section class="tab" id="tab-assess"></section>
+ <section class="tab" id="tab-teacher"></section>
+</main>
+<div id="print"></div>
+
+<script>
+/* ================= GÖGN ================= */
+const CH = [
+{ title:"Chapter 1: An Island of Birds",
+  paras:[
+`Sam Taylor had never seen so many birds in his life. When the small ferry arrived in Heimaey, the largest of the Westman Islands, the cliffs above the harbour were covered with puffins. “There are about a million of them here every summer,” said his cousin Ella, who was waiting for him on the pier with her little brother Óli. “But you came at the best time. It’s puffling season.”`,
+`Sam, who lived in Toronto, had no idea what a puffling was. Ella explained on the way home. In August, the baby puffins – the pufflings – leave their nests for the first time. They are supposed to fly out to sea at night, guided by the light of the moon. But many of them get confused by the bright lights of the town and land in the streets instead. “If nobody finds them, cats or cars get them,” Óli said seriously. “So everybody goes out with boxes and flashlights to save them.”`,
+`That night, the three children walked through the quiet streets with a cardboard box. By midnight they had found six pufflings hiding under cars and behind bins. Sam was surprised at how small and fluffy they were. They took the birds to the Puffling Station at the museum, where a volunteer named Rúna weighed and measured each one. “Leave them in the big box,” she said. “Tomorrow morning we will release them by the sea.”`,
+`But the next morning, when the children came back, the big box was empty. Rúna was standing next to it with a worried face. “This is the third time this week,” she said. “Somebody is taking our pufflings.”`],
+  gloss:[["pier","bryggja"],["puffling","lundapysja"],["confused","ruglaður"],["bin","ruslatunna"],["volunteer","sjálfboðaliði"],["weigh","vigta"],["release","sleppa (lausum)"],["worried","áhyggjufullur"]],
+  sec:{id:"r1",title:"Spurningar úr kafla 1",items:[
+   {t:"mc",id:"r1a",q:"Where does Ella live?",o:["In Toronto","On Heimaey","In Reykjavík","In England"],a:1},
+   {t:"mc",id:"r1b",q:"Why do many pufflings land in the streets?",o:["They are looking for food","They are afraid of the sea","The town lights confuse them","The children call them"],a:2},
+   {t:"mc",id:"r1c",q:"What can happen to a puffling if nobody finds it?",o:["It flies back to its nest","Cats or cars can get it","It walks to the museum","It sleeps until morning"],a:1},
+   {t:"mc",id:"r1d",q:"How many pufflings did the children find on the first night?",o:["Three","Five","Six","Ten"],a:2},
+   {t:"mc",id:"r1e",q:"Why was Rúna worried the next morning?",o:["The box was empty for the third time that week","Óli had lost his flashlight","One of the pufflings was ill","The museum was closed"],a:0},
+   {t:"mc",id:"r1f",q:"True or false? Sam knew a lot about pufflings before he came to Iceland.",o:["True","False"],a:1},
+   {t:"mc",id:"r1g",q:"True or false? Pufflings leave their nests for the first time in August.",o:["True","False"],a:0},
+   {t:"mc",id:"r1h",q:"True or false? Rúna weighed and measured the birds.",o:["True","False"],a:0}
+  ]}},
+{ title:"Chapter 2: Three Suspects",
+  paras:[
+`Ella loved mysteries, so she immediately took out a notebook. “Okay,” she said. “Who was here last night after we left?” Rúna thought for a moment. Three people had visited the station late in the evening.`,
+`The first was Kate Morgan, a photographer from England. She had been on the island for two weeks, taking pictures for a nature magazine. “She asked me a lot of questions about the pufflings,” Rúna said. “She wanted to know exactly when we release them.”`,
+`The second was old Gunnar, a retired fisherman who lived alone in a red house near the harbour. Most people in town thought he was grumpy because he rarely talked to anyone. “He came in to buy coffee,” Rúna said. “He didn’t say a word. He just looked at the box for a long time.”`,
+`The third suspect surprised everyone. “Óli was here too,” Rúna said. “He came back after you all went home.” Óli’s face turned red. He admitted that he had sneaked out of the house, but only because he had forgotten his favourite flashlight. “I didn’t touch the box. I promise!”`,
+`Sam and Ella decided to collect clues. Near the back door of the station they found sand on the floor and a strong smell of fish. On the doorstep there was a large boot print, much bigger than Óli’s shoes. Ella also noticed that the back door had been opened with a key – it wasn’t broken.`,
+`“Who has a key?” Sam asked. Rúna sighed. “The old volunteers do. There are four or five keys in town. Gunnar’s wife used to work here, many years ago.”`],
+  gloss:[["suspect","grunaður maður"],["photographer","ljósmyndari"],["retired","kominn á eftirlaun"],["grumpy","geðstirður"],["rarely","sjaldan"],["admit","viðurkenna"],["sneak out","laumast út"],["clue","vísbending"],["boot print","skófar"]],
+  sec:{id:"r2",title:"Spurningar úr kafla 2",items:[
+   {t:"mc",id:"r2a",q:"What did Kate Morgan want to know?",o:["Where Gunnar lived","When the pufflings are released","How much the coffee cost","Where Ella’s school was"],a:1},
+   {t:"mc",id:"r2b",q:"Why do many people think Gunnar is grumpy?",o:["He shouts at children","He rarely talks to anyone","He hates birds","He drives too fast"],a:1},
+   {t:"mc",id:"r2c",q:"Why did Óli go back to the station?",o:["To take the pufflings","To meet Kate","He had forgotten his flashlight","He wanted some coffee"],a:2},
+   {t:"mc",id:"r2d",q:"Which clue shows that Óli probably did NOT take the box?",o:["The smell of fish","The sand on the floor","The boot print was much bigger than his shoes","The door was open"],a:2},
+   {t:"mc",id:"r2e",q:"How was the back door opened?",o:["It was broken","With a key","Through a window","Rúna forgot to lock it"],a:1},
+   {t:"mc",id:"r2f",q:"True or false? Gunnar’s wife once worked at the Puffling Station.",o:["True","False"],a:0},
+   {t:"open",id:"r2g",q:"<b>Detective question:</b> Who do YOU think took the pufflings? Write 2–4 sentences in English and use at least two clues from the text.",min:20}
+  ]}},
+{ title:"Chapter 3: The Boat at Dawn",
+  paras:[
+`The children made a plan. That night they would hide near the station and watch. Their parents agreed, as long as Rúna stayed with them. At half past four in the morning, when the sky was already getting lighter, they heard footsteps. A tall figure in a heavy raincoat and big rubber boots unlocked the back door and came out a few minutes later carrying the box.`,
+`“It’s Gunnar!” Ella whispered. They followed him quietly down to the harbour, where he climbed into a small blue boat. Before he could start the engine, Rúna called his name. The old man turned around, and for the first time, the children saw him smile.`,
+`“I’m sorry,” he said. “I should have asked.” Then he told them his story. His wife, Sigga, had loved the pufflings more than anything. For thirty years, they had taken the rescued birds out on their boat every morning and released them far from the town lights. Sigga had died two years ago, and Gunnar still kept her old key. “When I take them out to sea, it feels like she is still with me,” he said quietly.`,
+`Nobody said anything for a while. Then Rúna put her hand on his shoulder. “From now on, you don’t need to do it secretly,” she said. “You can be our official morning boat.” Gunnar smiled again. “Only if these three detectives come with me.”`,
+`So on Sam’s last morning on Heimaey, the four of them sailed out into the bay. One by one, the pufflings ran to the edge of the boat, flapped their small wings and flew out over the grey water. Sam watched the last one disappear. He knew he would never forget this summer.`],
+  gloss:[["footsteps","fótatak"],["figure","mannvera"],["whisper","hvísla"],["engine","vél"],["rescued","bjargað"],["secretly","í laumi"],["official","opinber"],["bay","flói"],["disappear","hverfa"]],
+  sec:{id:"r3",title:"Spurningar úr kafla 3",items:[
+   {t:"mc",id:"r3a",q:"At what time did the children hear footsteps?",o:["At midnight","At half past four","At six o’clock","At half past nine"],a:1},
+   {t:"mc",id:"r3b",q:"Where did Gunnar take the box?",o:["To his red house","To the museum","To his small blue boat","To the beach"],a:2},
+   {t:"mc",id:"r3c",q:"Why did Gunnar take the pufflings?",o:["He wanted to sell them","He wanted to release them at sea, like he used to do with his wife","He wanted to take pictures of them","He wanted to keep them as pets"],a:1},
+   {t:"mc",id:"r3d",q:"What did Rúna offer Gunnar?",o:["A new key","A job at the museum","To be the official morning boat","A cup of coffee"],a:2},
+   {t:"mc",id:"r3e",q:"True or false? Gunnar was angry when Rúna called his name.",o:["True","False"],a:1},
+   {t:"open",id:"r3f",q:"Why do you think Gunnar kept his wife’s old key? Answer in 2–3 sentences in English.",min:15},
+   {t:"open",id:"r3g",q:"Were you right in your detective question? Which clue was the most important? (1–2 sentences in English)",min:8}
+  ]}}
+];
+
+const RX = {id:"rx",title:"Rannsóknarskýrsla: orðaforði og atburðarás",items:[
+ {t:"order",id:"rx1",q:"Raðaðu atburðunum í rétta tímaröð. Smelltu á þá í réttri röð.",w:[
+  "Sam arrives on the ferry.",
+  "The children find six pufflings in the streets.",
+  "The big box at the station is empty.",
+  "Ella and Sam find a large boot print.",
+  "Gunnar carries the box to his boat.",
+  "The pufflings fly out over the bay."]},
+ {t:"match",id:"rx2",q:"Paraðu saman ensku orðin og íslensku merkinguna.",pairs:[
+  ["pier","bryggja"],["release","sleppa"],["volunteer","sjálfboðaliði"],["suspect","grunaður maður"],["grumpy","geðstirður"],
+  ["rarely","sjaldan"],["admit","viðurkenna"],["clue","vísbending"],["footsteps","fótatak"],["disappear","hverfa"]]}
+]};
+
+const GRAM = [
+{id:"gA",title:"A. Þátíð óreglulegra sagna (past simple)",
+ rule:"Þátíð (past simple) notum við um það sem gerðist og er lokið. Reglulegar sagnir fá <b>-ed</b> (arrive → arrived) en óreglulegar sagnir þarf að læra: find → <b>found</b>, take → <b>took</b>, fly → <b>flew</b>. Skrifaðu sögnina í þátíð.",
+ items:[
+  {t:"gap",id:"gA1",pre:"The ferry ",hint:"arrive",post:" in Heimaey.",a:["arrived"]},
+  {t:"gap",id:"gA2",pre:"Ella ",hint:"be",post:" waiting on the pier.",a:["was"]},
+  {t:"gap",id:"gA3",pre:"The children ",hint:"find",post:" six pufflings.",a:["found"]},
+  {t:"gap",id:"gA4",pre:"Óli ",hint:"forget",post:" his flashlight.",a:["forgot"]},
+  {t:"gap",id:"gA5",pre:"Gunnar ",hint:"take",post:" the box to his boat.",a:["took"]},
+  {t:"gap",id:"gA6",pre:"They ",hint:"hide",post:" near the station.",a:["hid"]},
+  {t:"gap",id:"gA7",pre:"At half past four they ",hint:"hear",post:" footsteps.",a:["heard"]},
+  {t:"gap",id:"gA8",pre:"The last puffling ",hint:"fly",post:" over the water.",a:["flew"]},
+  {t:"gap",id:"gA9",pre:"Rúna ",hint:"put",post:" her hand on his shoulder.",a:["put"]},
+  {t:"gap",id:"gA10",pre:"Sam ",hint:"catch",post:" a puffling under a car.",a:["caught"]}
+ ]},
+{id:"gB",title:"B. Present perfect eða past simple?",
+ rule:"<b>Present perfect</b> (have/has + lýsingarháttur þátíðar) tengir fortíð og nútíð: reynsla (<i>ever, never</i>), eitthvað sem stendur enn (<i>since, for</i>) eða nýlokið með áhrif núna. <b>Past simple</b> notum við þegar tíminn er liðinn og nefndur (<i>yesterday, last summer, two years ago</i>).",
+ items:[
+  {t:"sel",id:"gB1",pre:"I ",o:["have been","was"],post:" to Heimaey three times in my life.",a:0},
+  {t:"sel",id:"gB2",pre:"Last summer we ",o:["went","have gone"],post:" to Heimaey.",a:0},
+  {t:"sel",id:"gB3",pre:"Rúna ",o:["has worked","worked"],post:" at the station since 2015.",a:0},
+  {t:"sel",id:"gB4",pre:"Sigga ",o:["died","has died"],post:" two years ago.",a:0},
+  {t:"sel",id:"gB5",pre:"",o:["Have you ever held","Did you ever hold"],post:" a puffling?",a:0},
+  {t:"sel",id:"gB6",pre:"Kate ",o:["has been","was"],post:" on the island for two weeks, and she is still here.",a:0},
+  {t:"sel",id:"gB7",pre:"Yesterday Ella ",o:["lost","has lost"],post:" her pen.",a:0},
+  {t:"sel",id:"gB8",pre:"Oh no! Óli ",o:["has lost","lost"],post:" his flashlight again, and now he can’t find it.",a:0}
+ ]},
+{id:"gC",title:"C. Stigbreyting lýsingarorða",
+ rule:"Stutt lýsingarorð fá <b>-er / -est</b> (small → smaller → smallest). Löng lýsingarorð fá <b>more / most</b> (expensive → more expensive → most expensive). Óregluleg: good → better → best, bad → worse → worst. Stundum tvöfaldast samhljóð: big → bigger.",
+ items:[
+  {t:"gap",id:"gC1",pre:"Heimaey is the ",hint:"large",post:" of the Westman Islands.",a:["largest"]},
+  {t:"gap",id:"gC2",pre:"Gunnar’s boots were much ",hint:"big",post:" than Óli’s shoes.",a:["bigger"]},
+  {t:"gap",id:"gC3",pre:"August is the ",hint:"good",post:" time to visit.",a:["best"]},
+  {t:"gap",id:"gC4",pre:"The pufflings were ",hint:"small",post:" than Sam expected.",a:["smaller"]},
+  {t:"gap",id:"gC5",pre:"Kate’s camera was ",hint:"expensive",post:" than Sam’s phone.",a:["more expensive"]},
+  {t:"gap",id:"gC6",pre:"It was the ",hint:"bad",post:" night of the week.",a:["worst"]},
+  {t:"gap",id:"gC7",pre:"The sea is ",hint:"safe",post:" than the street for a puffling.",a:["safer"]},
+  {t:"gap",id:"gC8",pre:"That was the ",hint:"beautiful",post:" morning of the whole summer.",a:["most beautiful"]}
+ ]},
+{id:"gD",title:"D. Forsetningar: in, on, at, under",
+ rule:"<b>in</b> = mánuðir, ár, borgir og lönd (in August, in 1955, in Toronto). <b>on</b> = vikudagar og yfirborð (on Monday, on the table). <b>at</b> = klukkan (at midnight, at half past four). <b>under</b> = undir.",
+ items:[
+  {t:"sel",id:"gD1",pre:"The pufflings leave their nests ",o:["in","on","at","under"],post:" August.",a:0},
+  {t:"sel",id:"gD2",pre:"Sam lives ",o:["in","on","at","under"],post:" Toronto.",a:0},
+  {t:"sel",id:"gD3",pre:"The boat left ",o:["in","on","at","under"],post:" half past four.",a:2},
+  {t:"sel",id:"gD4",pre:"My birthday is ",o:["in","on","at","under"],post:" Monday.",a:1},
+  {t:"sel",id:"gD5",pre:"Two pufflings were hiding ",o:["in","on","at","under"],post:" a car.",a:3},
+  {t:"sel",id:"gD6",pre:"Gunnar was born ",o:["in","on","at","under"],post:" 1955.",a:0},
+  {t:"sel",id:"gD7",pre:"Rúna put the coffee ",o:["in","on","at","under"],post:" the table.",a:1},
+  {t:"sel",id:"gD8",pre:"We went home ",o:["in","on","at","under"],post:" midnight.",a:2}
+ ]},
+{id:"gE",title:"E. Finndu villuna",
+ rule:"Í hverri setningu er <b>ein</b> villa. Smelltu á orðið sem er rangt. Þegar farið er yfir sérðu hvernig það á að vera.",
+ items:[
+  {t:"err",id:"gE1",s:"Sam didn’t knew what a puffling was.",a:2,fix:"know"},
+  {t:"err",id:"gE2",s:"There is many puffins on the cliffs.",a:1,fix:"are"},
+  {t:"err",id:"gE3",s:"Óli have forgotten his flashlight.",a:1,fix:"has"},
+  {t:"err",id:"gE4",s:"Gunnar’s boots were bigger then Óli’s shoes.",a:4,fix:"than"},
+  {t:"err",id:"gE5",s:"Ella writed everything in her notebook.",a:1,fix:"wrote"},
+  {t:"err",id:"gE6",s:"Kate asked Rúna a lot of question.",a:6,fix:"questions"},
+  {t:"err",id:"gE7",s:"Rúna gave the box to he.",a:5,fix:"him"},
+  {t:"err",id:"gE8",s:"Where did you went last night?",a:3,fix:"go"}
+ ]},
+{id:"gF",title:"F. Orðaröð og spurningar",
+ rule:"Raðaðu orðunum í rétta röð. Mundu: í spurningum kemur hjálparsögnin (<i>do, does, did, have</i>) á undan frumlaginu: <i>Where <b>did</b> you go?</i>",
+ items:[
+  {t:"build",id:"gF1",w:["why","did","Gunnar","take","the","pufflings"],end:"?"},
+  {t:"build",id:"gF2",w:["have","you","ever","seen","a","puffin"],end:"?"},
+  {t:"build",id:"gF3",w:["where","does","Kate","come","from"],end:"?"},
+  {t:"build",id:"gF4",w:["the","children","followed","him","quietly","to","the","harbour"],end:"."},
+  {t:"build",id:"gF5",w:["how","many","pufflings","did","they","find"],end:"?"},
+  {t:"build",id:"gF6",w:["Ella","has","always","loved","mysteries"],end:"."}
+ ]}
+];
+const BONUS = {id:"gG",bonus:true,title:"🌶️ Pipar-áskorun: Ef ég væri … (second conditional)",
+ rule:"Önnur skilyrðissetning lýsir ímynduðum aðstæðum: <b>If + þátíð, … would + nafnháttur</b>. <i>If I had a boat, I would sail to Heimaey.</i> Með <i>be</i> er oft notað <b>were</b> fyrir allar persónur: <i>If I were you …</i>",
+ items:[
+  {t:"gap",id:"gG1",pre:"If I ",hint:"find",post:" a puffling, I would take it to the station.",a:["found"]},
+  {t:"gap",id:"gG2",pre:"If Óli ",hint:"be",post:" older, he could go out alone at night.",a:["were","was"]},
+  {t:"gap",id:"gG3",pre:"What would you do if you ",hint:"see",post:" Gunnar at night?",a:["saw"]},
+  {t:"gap",id:"gG4",pre:"If I ",hint:"have",post:" a boat, I would sail around the island.",a:["had"]},
+  {t:"gap",id:"gG5",pre:"If the town ",hint:"turn off",post:" its lights, fewer pufflings would get lost.",a:["turned off"]},
+  {t:"gap",id:"gG6",pre:"Gunnar ",hint:"be",post:" very sad if he couldn’t sail anymore.",a:["would be","'d be"]}
+ ]};
+
+const WRITE_MAIN = [
+ {title:"Dagbók Sams",en:"You are Sam. Write a diary entry about your last morning on Heimaey: the boat trip with Gunnar, the pufflings and how you felt.",tip:"Skrifaðu í þátíð (past simple) og segðu frá tilfinningum."},
+ {title:"Fréttagrein",en:"Write a news article for the island newspaper with the headline “Puffling Mystery Solved!”",tip:"Fyrirsögn, hver – hvað – hvar – hvenær – af hverju, og ein tilvitnun í einhvern úr sögunni."},
+ {title:"Saga Gunnars",en:"Tell the story from Gunnar’s point of view. Start the night before the children follow him.",tip:"Skrifaðu í fyrstu persónu (I …). Hvað hugsar hann? Hvernig líður honum?"}
+];
+const CHECKS = ["Textinn hefur upphaf, miðju og endi.","Ég notaði þátíð (past simple) rétt.","Ég notaði að minnsta kosti fimm orð úr orðalistunum.","Ég notaði tengiorð (then, because, after that, but …).","Ég las textann yfir og lagaði stafsetningu, stóra stafi og punkta."];
+const SELF = ["Ég get skilið aðalatriði í lengri sögu á ensku.","Ég get fundið upplýsingar og vísbendingar í texta.","Ég get notað þátíð óreglulegra sagna rétt.","Ég veit hvenær á að nota present perfect og hvenær past simple.","Ég get skrifað samfelldan texta á ensku með upphafi, miðju og endi."];
+const LEVELS = ["Ekki enn","Svolítið","Já","Mjög vel"];
+const RUBRIC = [
+ ["Innihald og verkefnislausn","Leysir verkefnið að fullu; frumlegar og ríkar hugmyndir","Leysir verkefnið; hugmyndir skýrar","Leysir verkefnið að hluta","Fylgir verkefninu illa"],
+ ["Skipulag og samhengi","Skýrt upphaf, miðja og endir; tengiorð vel notuð","Góð uppbygging; nokkur tengiorð","Uppbygging óljós á köflum","Lítil uppbygging"],
+ ["Orðaforði","Fjölbreyttur og nákvæmur; notar orð úr sögunni","Hæfilega fjölbreyttur","Einfaldur; nokkuð um endurtekningar","Mjög takmarkaður"],
+ ["Málfræði og stafsetning","Fáar villur; tíðir réttar","Nokkrar villur sem trufla ekki skilning","Villur trufla stundum skilning","Villur trufla skilning oft"]
+];
+
+/* ================= ÁSTAND ================= */
+const KEY_BASE = "lundapysjur_v1";
+const SKIL = window.Skil && Skil.configured ? Skil : null;
+let KEY = KEY_BASE + (SKIL && SKIL.code() ? "_" + SKIL.code() : "");
+let LOGGED = false, FEEDBACK = null;
+const TEACHER = new URLSearchParams(location.search).has("kennari");
+let S = load();
+function blank(){return {name:"",cls:"",ans:{},done:{},score:{},write:{choice:null,main:"",short:""},checks:{},self:{},selfText:{hard:"",fun:""}}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.ans)return Object.assign(blank(),s)}catch(e){}return blank()}
+function save(){S._t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}sync()}
+/* Senda stöðu til kennara (skil.js) */
+function sync(){
+ if(!LOGGED)return;
+ const r=totals(READ), g=totals(GRAM), sum=reportText();
+ if(allClosed())SKIL.complete({score:r.g+g.g,max:r.max+g.max,needsReview:true,data:S,summary:sum});
+ else SKIL.save(Math.round(100*STAMPS.filter(s=>s[1]()).length/STAMPS.length),S,sum);
+}
+
+const READ = [CH[0].sec,CH[1].sec,CH[2].sec,RX];
+const ALLSEC = [...READ,...GRAM,BONUS];
+const SEC = {}, ITEM = {}, NUM = {}, ITEMSEC = {};
+ALLSEC.forEach(s=>{SEC[s.id]=s;s.items.forEach((it,i)=>{ITEM[it.id]=it;NUM[it.id]=i+1;ITEMSEC[it.id]=s.id})});
+
+/* ================= HJÁLPARFÖLL ================= */
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const wc = s => (s||"").trim().split(/\s+/).filter(Boolean).length;
+const norm = s => String(s||"").toLowerCase().replace(/[’‘`]/g,"'").replace(/\s+/g," ").trim().replace(/[.!?]$/,"");
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+const toks = s => s.split(" ");
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function perm(n,seed){const a=[...Array(n).keys()];let r=hash(seed)||1;for(let i=n-1;i>0;i--){r^=r<<13;r>>>=0;r^=r>>>17;r^=r<<5;r>>>=0;const j=r%(i+1);[a[i],a[j]]=[a[j],a[i]]}if(a.every((x,i)=>x===i)&&n>1)a.push(a.shift());return a}
+
+function answered(it){const v=S.ans[it.id];
+ switch(it.t){
+  case "mc":case "sel":case "err":return Number.isInteger(v);
+  case "gap":return norm(v)!=="";
+  case "build":case "order":return Array.isArray(v)&&v.length===it.w.length;
+  case "match":return v&&it.pairs.every((_,i)=>Number.isInteger(v[i]));
+  case "open":return wc(v)>0;
+ }}
+function grade(it){const v=S.ans[it.id];
+ switch(it.t){
+  case "mc":case "sel":case "err":return [v===it.a?1:0,1];
+  case "gap":return [it.a.map(norm).includes(norm(v))?1:0,1];
+  case "build":{const got=(v||[]).map(i=>it.w[i]).join(" ");return [got===it.w.join(" ")?1:0,1]}
+  case "order":{let g=0;(v||[]).forEach((x,k)=>{if(x===k)g++});return [g,it.w.length]}
+  case "match":{let g=0;it.pairs.forEach((_,i)=>{if(v&&v[i]===i)g++});return [g,it.pairs.length]}
+  default:return [0,0];
+ }}
+function answerText(it){
+ switch(it.t){
+  case "mc":case "sel":return it.o[it.a];
+  case "gap":return it.a[0];
+  case "err":return `„${toks(it.s)[it.a].replace(/[.?!]$/,"")}“ → „${it.fix}“`;
+  case "build":return cap(it.w.join(" "))+it.end;
+  case "order":return it.w.map((w,i)=>(i+1)+". "+w).join("<br>");
+  case "match":return it.pairs.map(p=>p[0]+" = "+p[1]).join(", ");
+  default:return "";
+ }}
+
+/* ================= TEIKNING ================= */
+function renderItem(it,done){
+ const n=NUM[it.id], v=S.ans[it.id], dis=done?"disabled":"";
+ let cls="item", body="", fb="";
+ if(done && it.t!=="open"){
+  const r=grade(it);
+  cls+= r[0]===r[1]?" good":(r[0]>0?" part":" bad");
+  fb = r[0]===r[1] ? `<div class="fb ok">✓ Rétt</div>` : `<div class="fb">Rétt svar: ${answerText(it)}</div>`;
+ }
+ switch(it.t){
+ case "mc":
+  body=`<p class="q"><b>${n}.</b> ${it.q}</p><div class="opts">`+it.o.map((o,i)=>`<button class="opt${v===i?" sel":""}${done&&i===it.a?" right":""}" data-act="mc" data-id="${it.id}" data-v="${i}" ${dis}>${o}</button>`).join("")+`</div>`;break;
+ case "gap":
+  body=`<p class="q"><b>${n}.</b> ${it.pre}<input class="gap" data-act="gap" data-id="${it.id}" value="${esc(v)}" ${dis} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"> <span class="hint">(${it.hint})</span>${it.post}</p>`;break;
+ case "sel":
+  body=`<p class="q"><b>${n}.</b> ${it.pre}<select class="sel" data-act="sel" data-id="${it.id}" ${dis}><option value="">— veldu —</option>`+it.o.map((o,i)=>`<option value="${i}" ${v===i?"selected":""}>${o}</option>`).join("")+`</select>${it.post}</p>`;break;
+ case "err":
+  body=`<p class="q"><b>${n}.</b></p><div class="tokens">`+toks(it.s).map((w,i)=>`<button class="tok${v===i?(done&&i!==it.a?" wrong":" sel"):""}" data-act="err" data-id="${it.id}" data-v="${i}" ${dis}>${esc(w)}</button>`).join("")+`</div>`;break;
+ case "build":case "order":{
+  const p=perm(it.w.length,it.id), chosen=v||[], col=it.t==="order";
+  const area=chosen.length?chosen.map((ix,k)=>`<button class="tok sel${col?" block":""}" data-act="untok" data-id="${it.id}" data-k="${k}" ${dis}>${col?(k+1)+". ":""}${esc(it.w[ix])}</button>`).join("")+(it.end&&chosen.length===it.w.length?`<span>${it.end}</span>`:""):`<span class="ph">Smelltu á orðin hér fyrir neðan …</span>`;
+  const bank=p.map(ix=>`<button class="tok${col?" block":""}${chosen.includes(ix)?" used":""}" data-act="tok" data-id="${it.id}" data-v="${ix}" ${dis||(chosen.includes(ix)?"disabled":"")}>${esc(it.w[ix])}</button>`).join("");
+  body=`<p class="q"><b>${n}.</b> ${it.q||""}</p><div class="buildarea${col?" col":""}">${area}</div>${done?"":`<div class="tokens${col?" ":""}" style="${col?"flex-direction:column":""}">${bank}</div><div style="margin-top:6px"><button class="btn" style="padding:4px 12px;font-size:.85rem" data-act="clr" data-id="${it.id}">Hreinsa</button> <span class="small">Smelltu á orð í rammanum til að taka það út.</span></div>`}`;
+  break;}
+ case "match":{
+  const p=perm(it.pairs.length,it.id), mv=v||{};
+  body=`<p class="q"><b>${n}.</b> ${it.q}</p>`+it.pairs.map((pr,i)=>{
+   const ok=done?(mv[i]===i?" ✓":` ✗ <span class="small">(${pr[1]})</span>`):"";
+   return `<div class="mrow"><span class="en">${pr[0]}</span><select class="sel" data-act="match" data-id="${it.id}" data-i="${i}" ${dis}><option value="">— veldu —</option>${p.map(j=>`<option value="${j}" ${mv[i]===j?"selected":""}>${it.pairs[j][1]}</option>`).join("")}</select>${ok}</div>`}).join("");
+  break;}
+ case "open":
+  body=`<p class="q"><b>${n}.</b> ${it.q}</p><textarea data-act="open" data-id="${it.id}" ${dis} placeholder="Write in English …">${esc(v)}</textarea><div class="wc" id="wc-${it.id}">${wc(v)} orð</div>${done?`<div class="small">Kennarinn fer yfir þetta svar.</div>`:""}`;break;
+ }
+ return `<div class="${cls}" id="it-${it.id}">${body}${fb}</div>`;
+}
+function scoreMsg(g,t){const p=t?g/t:0;return p>=.9?"Frábært!":p>=.7?"Vel gert!":p>=.5?"Ágætt – skoðaðu villurnar.":"Farðu vel yfir réttu svörin."}
+function renderSection(sec){
+ const done=!!S.done[sec.id];
+ const items=sec.items.map(it=>renderItem(it,done)).join("");
+ const sc=S.score[sec.id];
+ const foot=done?`<div class="result">Farið yfir: <b>${sc[0]} / ${sc[1]}</b> stig – ${scoreMsg(sc[0],sc[1])}</div>`
+  :`<div class="checkrow"><button class="btn primary" data-act="check" data-sec="${sec.id}">Fara yfir svör</button><span class="warn" id="warn-${sec.id}"></span></div>`;
+ return `<div id="sec-${sec.id}">${items}${foot}</div>`;
+}
+function unlocked(i){if(TEACHER||i===0)return true;return !!S.done[READ[i-1].id]}
+
+function renderStart(){
+ document.getElementById("tab-start").innerHTML=`
+ <div class="card story">
+  <h2>Velkomin(n), rannsóknarlögregla!</h2>
+  <p>Á Heimaey hverfa lundapysjur á dularfullan hátt. Þú lest söguna <b>The Puffling Mystery</b> í þremur köflum, safnar vísbendingum og leysir málið. Á leiðinni þjálfar þú málfræði, skrifar þinn eigin texta og metur eigin vinnu.</p>
+  <div class="steps">
+   <div class="step"><b>1. Saga og lesskilningur</b>Lestu hvern kafla og svaraðu spurningunum. Næsti kafli opnast þegar þú hefur farið yfir svörin.</div>
+   <div class="step"><b>2. Málfræði</b>Sex æfingar byggðar á sögunni – og pipar-áskorun fyrir þau sem vilja meira.</div>
+   <div class="step"><b>3. Ritun</b>Eitt stærra ritunarverkefni að eigin vali og einn stuttur tölvupóstur.</div>
+   <div class="step"><b>4. Námsmat</b>Sjálfsmat og skilablað sem þú prentar eða afritar til kennarans.</div>
+  </div>
+  ${LOGGED?`<div class="field" style="align-items:center"><span>Skráð(ur) inn: <b>${esc(S.name)}</b></span>
+   <button class="btn primary" data-act="go">Hefja rannsóknina →</button></div>
+  <p class="small" id="startWarn">Svörin vistast sjálfkrafa og kennarinn sér hvernig gengur. Þú getur haldið áfram í hvaða tæki sem er með kóðanum þínum.</p>`
+  :`<div class="field">
+   <input id="nameIn" data-act="name" placeholder="Nafn" value="${esc(S.name)}">
+   <input id="clsIn" data-act="cls" placeholder="Bekkur" value="${esc(S.cls)}" style="min-width:120px">
+   <button class="btn primary" data-act="go">Hefja rannsóknina →</button>
+  </div>
+  <p class="small" id="startWarn">Svörin vistast sjálfkrafa í þessum vafra. Þú getur hætt og haldið áfram seinna í sama tæki.</p>`}
+ </div>`;
+}
+function renderRead(){
+ let h="";
+ CH.forEach((c,i)=>{
+  if(!unlocked(i)){h+=`<div class="lock"><b>🔒 ${c.title}</b>Opnast þegar þú hefur farið yfir svörin í kafla ${i}.</div>`;return}
+  h+=`<div class="card story"><h2>${c.title}</h2><div class="txt">${c.paras.map(p=>`<p>${p}</p>`).join("")}</div>
+   <div class="gloss"><b>Gagnleg orð:</b><br>${c.gloss.map(g=>`<span><i>${g[0]}</i> – ${g[1]}</span>`).join("")}</div></div>
+   <div class="card"><h2>${c.sec.title}</h2>${renderSection(c.sec)}</div>`;
+ });
+ if(unlocked(3)) h+=`<div class="card"><h2>${RX.title}</h2>${renderSection(RX)}</div>`;
+ else h+=`<div class="lock"><b>🔒 Rannsóknarskýrsla</b>Opnast þegar þú hefur lokið kafla 3.</div>`;
+ document.getElementById("tab-read").innerHTML=h;
+}
+function renderGram(){
+ const all=[...GRAM,BONUS];
+ const overview=`<div class="card"><h2>Málfræðiæfingar</h2><p class="small" style="margin-top:0">Lestu regluna efst í hverri æfingu áður en þú byrjar. Þú getur gert æfingarnar í hvaða röð sem er, en athugaðu að hver æfing er aðeins metin einu sinni.</p>
+  <table><tr><th>Æfing</th><th>Staða</th></tr>${all.map(s=>{const sc=S.score[s.id];return `<tr><td><a href="#g-${s.id}">${s.title}</a></td><td>${S.done[s.id]?`${sc[0]} / ${sc[1]}`:"Ólokið"}</td></tr>`}).join("")}</table></div>`;
+ document.getElementById("tab-gram").innerHTML=overview+all.map(s=>`<div class="card${s.bonus?" bonus":""}" id="g-${s.id}"><h2>${s.title}</h2><div class="rule">${s.rule}</div>${renderSection(s)}</div>`).join("");
+}
+function renderWrite(){
+ const ch=S.write.choice, mw=wc(S.write.main), sw=wc(S.write.short);
+ document.getElementById("tab-write").innerHTML=`
+ <div class="card"><h2>Ritunarverkefni 1 – veldu eitt (120–200 orð)</h2>
+  <div class="choices">${WRITE_MAIN.map((w,i)=>`<button class="choice${ch===i?" sel":""}" data-act="wchoice" data-v="${i}"><b>${w.title}</b>${w.en}<div class="small" style="margin-top:6px">${w.tip}</div></button>`).join("")}</div>
+  ${ch===null?`<p class="small">Veldu verkefni hér fyrir ofan til að byrja að skrifa.</p>`:`
+  <textarea class="big" data-act="wtext" data-k="main" placeholder="Start writing here …">${esc(S.write.main)}</textarea>
+  <div class="wc${mw>=120&&mw<=200?" ok":""}" id="wc-main">${mw} orð (markmið: 120–200)</div>
+  <h3>Gátlisti áður en þú skilar</h3>
+  <div class="checks">${CHECKS.map((c,i)=>`<label><input type="checkbox" data-act="wcheck" data-i="${i}" ${S.checks[i]?"checked":""}> ${c}</label>`).join("")}</div>`}
+ </div>
+ <div class="card"><h2>Ritunarverkefni 2 – tölvupóstur (50–90 orð)</h2>
+  <p style="margin-top:0">A month later, Ella writes an email to Sam. Write the email. Tell him what has happened on the island since he left. Use the <b>present perfect</b> at least twice (e.g. <i>Gunnar has taken …, We have found …</i>).</p>
+  <textarea data-act="wtext" data-k="short" placeholder="Hi Sam, …" style="min-height:150px">${esc(S.write.short)}</textarea>
+  <div class="wc${sw>=50&&sw<=90?" ok":""}" id="wc-short">${sw} orð (markmið: 50–90)</div>
+ </div>`;
+}
+function totals(list){let g=0,t=0;list.forEach(s=>{const sc=S.score[s.id];if(sc){g+=sc[0];t+=sc[1]}});const max=list.reduce((a,s)=>a+s.items.reduce((b,it)=>b+(it.t==="order"?it.w.length:it.t==="match"?it.pairs.length:it.t==="open"?0:1),0),0);return {g,t,max}}
+function bar(g,max){const p=max?Math.round(100*g/max):0;return `<div class="bar"><i style="width:${p}%"></i></div>`}
+function allClosed(){return STAMPS.every(s=>s[1]())}
+function renderAssess(){
+ const r=totals(READ), gr=totals(GRAM), b=totals([BONUS]);
+ const opens=ALLSEC.flatMap(s=>s.items).filter(it=>it.t==="open");
+ document.getElementById("tab-assess").innerHTML=`
+ ${FEEDBACK&&(FEEDBACK.feedback||FEEDBACK.teacher_score)?`<div class="card" style="border:2px solid var(--green)"><h2>Umsögn kennara</h2>${FEEDBACK.teacher_score?`<p><b>Mat:</b> ${esc(FEEDBACK.teacher_score)}</p>`:""}<p style="white-space:pre-wrap;margin:0">${esc(FEEDBACK.feedback||"")}</p></div>`:""}
+ ${allClosed()?`<div class="case-closed">🕵️ Máli lokað! Þú hefur klárað öll verkefnin. Prentaðu skilablaðið eða afritaðu það til kennarans.</div>`:""}
+ <div class="card"><h2>Staðan þín</h2>
+  <table>
+   <tr><th>Hluti</th><th>Stig</th><th style="width:40%">Framvinda</th></tr>
+   <tr><td>Lesskilningur (sjálfvirkt metið)</td><td>${r.g} / ${r.max}</td><td>${bar(r.g,r.max)}</td></tr>
+   <tr><td>Málfræði (sjálfvirkt metið)</td><td>${gr.g} / ${gr.max}</td><td>${bar(gr.g,gr.max)}</td></tr>
+   <tr><td>🌶️ Pipar-áskorun (aukastig)</td><td>${b.g} / ${b.max}</td><td>${bar(b.g,b.max)}</td></tr>
+   <tr><td>Opin svör (kennari metur)</td><td>${opens.filter(answered).length} / ${opens.length} svarað</td><td></td></tr>
+   <tr><td>Ritun 1 (kennari metur)</td><td>${wc(S.write.main)} orð</td><td></td></tr>
+   <tr><td>Ritun 2 (kennari metur)</td><td>${wc(S.write.short)} orð</td><td></td></tr>
+  </table>
+ </div>
+ <div class="card"><h2>Sjálfsmat</h2>
+  ${SELF.map((s,i)=>`<div class="selfrow">${s}<div class="lv">${LEVELS.map((l,j)=>`<button class="${S.self[i]===j?"sel":""}" data-act="self" data-i="${i}" data-v="${j}">${l}</button>`).join("")}</div></div>`).join("")}
+  <h3>Hvað fannst þér erfiðast?</h3><textarea data-act="selftext" data-k="hard" style="min-height:60px">${esc(S.selfText.hard)}</textarea>
+  <h3>Hvað fannst þér skemmtilegast?</h3><textarea data-act="selftext" data-k="fun" style="min-height:60px">${esc(S.selfText.fun)}</textarea>
+ </div>
+ <div class="card"><h2>Skila til kennara</h2>
+  <p style="margin-top:0">Skilablaðið inniheldur stig, opin svör, ritunarverkefnin, sjálfsmatið og matskvarða fyrir kennarann.</p>
+  <div class="checkrow">
+   <button class="btn primary" data-act="print">Prenta / vista sem PDF</button>
+   <button class="btn" data-act="copy">Afrita sem texta</button>
+   <button class="btn danger" data-act="reset" id="resetBtn">Byrja upp á nýtt</button>
+   <span class="warn" id="copyMsg"></span>
+  </div>
+ </div>`;
+}
+function renderTeacher(){
+ if(!TEACHER)return;
+ const r=totals(READ), gr=totals(GRAM);
+ const key=s=>`<h3>${s.title}</h3><ol class="key">${s.items.map(it=>`<li>${it.t==="open"?"<i>Opið svar – kennari metur</i>":answerText(it)}</li>`).join("")}</ol>`;
+ document.getElementById("tab-teacher").innerHTML=`
+ <div class="card"><h2>Fyrir kennara</h2>
+  <p style="margin-top:0">Þessi flipi sést aðeins þegar <code>?kennari</code> er aftast í slóðinni. Í kennaraham eru allir kaflar opnir.</p>
+  <ul>
+   <li>Sjálfvirkt metið: lesskilningur (${r.max} stig) og málfræði (${gr.max} stig), auk ${totals([BONUS]).max} aukastiga í pipar-áskorun.</li>
+   <li>Kennari metur: þrjú opin svör í lesskilningi, ritun 1 (120–200 orð) og ritun 2 (50–90 orð) með matskvarðanum hér fyrir neðan. Hann prentast líka á skilablað nemandans.</li>
+   <li>Hver æfing er metin einu sinni (svörin læsast) svo stigin endurspegli fyrstu tilraun.</li>
+   <li>Svör vistast í vafra nemandans (localStorage). Ef nemendur deila tæki þarf að smella á „Byrja upp á nýtt“ í Námsmati á milli.</li>
+   <li>Áætlaður tími: 3–5 kennslustundir, eftir því hve mikið er gert heima.</li>
+  </ul>
+ </div>
+ <div class="card"><h2>Matskvarði fyrir ritun</h2>${rubricTable(false)}</div>
+ <div class="card"><h2>Lausnir</h2>${[...READ,...GRAM,BONUS].map(key).join("")}</div>`;
+}
+function rubricTable(blankCol){
+ return `<table><tr><th>Viðmið</th><th>4 – Framúrskarandi</th><th>3 – Góð hæfni</th><th>2 – Á góðri leið</th><th>1 – Þarfnast æfingar</th>${blankCol?"<th>Ritun 1</th><th>Ritun 2</th>":""}</tr>${RUBRIC.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>${blankCol?"<td></td><td></td>":""}</tr>`).join("")}</table>`;
+}
+const STAMPS=[
+ ["Kafli 1",()=>!!S.done.r1],["Kafli 2",()=>!!S.done.r2],["Kafli 3",()=>!!S.done.r3],["Skýrsla",()=>!!S.done.rx],
+ ["Málfræði",()=>GRAM.every(s=>S.done[s.id])],["Ritun",()=>wc(S.write.main)>=100&&wc(S.write.short)>=40],["Sjálfsmat",()=>SELF.every((_,i)=>Number.isInteger(S.self[i]))]];
+function renderHeader(){
+ document.getElementById("who").innerHTML=S.name?`🕵️ ${esc(S.name)}${S.cls?" · "+esc(S.cls):""}`:"";
+ document.getElementById("stamps").innerHTML=STAMPS.map(s=>`<span class="stamp${s[1]()?" on":""}">${s[1]()?"✓ ":""}${s[0]}</span>`).join("");
+}
+function renderAll(){renderHeader();renderStart();renderRead();renderGram();renderWrite();renderAssess();renderTeacher()}
+
+/* ================= SKILABLAÐ ================= */
+function buildReport(){
+ const r=totals(READ), gr=totals(GRAM), b=totals([BONUS]);
+ const opens=ALLSEC.flatMap(s=>s.items).filter(it=>it.t==="open");
+ const d=new Date().toLocaleDateString("is-IS");
+ const secRows=[...READ,...GRAM,BONUS].map(s=>{const sc=S.score[s.id];return `<tr><td>${s.title}</td><td>${sc?sc[0]+" / "+sc[1]:"Ólokið"}</td></tr>`}).join("");
+ document.getElementById("print").innerHTML=`
+ <h1>The Puffling Mystery – skilablað</h1>
+ <div><b>Nafn:</b> ${esc(S.name)||"________________"} &nbsp; <b>Bekkur:</b> ${esc(S.cls)||"______"} &nbsp; <b>Dags.:</b> ${d}</div>
+ <h2>Sjálfvirkt metið</h2>
+ <table><tr><th>Hluti</th><th>Stig</th></tr>
+  <tr><td><b>Lesskilningur samtals</b></td><td><b>${r.g} / ${r.max}</b></td></tr>
+  <tr><td><b>Málfræði samtals</b></td><td><b>${gr.g} / ${gr.max}</b></td></tr>
+  <tr><td>Pipar-áskorun (aukastig)</td><td>${b.g} / ${b.max}</td></tr>${secRows}</table>
+ <h2>Opin svör í lesskilningi</h2>
+ ${opens.map(it=>`<p><b>${it.q.replace(/<[^>]+>/g,"")}</b></p><div class="pre">${esc(S.ans[it.id])||"<i>Ekki svarað</i>"}</div>`).join("")}
+ <h2 class="pb">Ritun 1: ${S.write.choice!==null?WRITE_MAIN[S.write.choice].title:"Ekkert verkefni valið"} (${wc(S.write.main)} orð)</h2>
+ ${S.write.choice!==null?`<p><i>${WRITE_MAIN[S.write.choice].en}</i></p>`:""}
+ <div class="pre">${esc(S.write.main)||"<i>Ekkert skrifað</i>"}</div>
+ <p><b>Gátlisti nemanda:</b> ${CHECKS.map((c,i)=>(S.checks[i]?"☑ ":"☐ ")+c).join(" &nbsp; ")}</p>
+ <h2>Ritun 2: Tölvupóstur (${wc(S.write.short)} orð)</h2>
+ <div class="pre">${esc(S.write.short)||"<i>Ekkert skrifað</i>"}</div>
+ <h2>Sjálfsmat</h2>
+ <table>${SELF.map((s,i)=>`<tr><td>${s}</td><td>${Number.isInteger(S.self[i])?LEVELS[S.self[i]]:"–"}</td></tr>`).join("")}</table>
+ <p><b>Erfiðast:</b> ${esc(S.selfText.hard)||"–"}<br><b>Skemmtilegast:</b> ${esc(S.selfText.fun)||"–"}</p>
+ <h2 class="pb">Mat kennara á ritun</h2>
+ ${rubricTable(true)}
+ <p style="margin-top:14px"><b>Opin svör í lesskilningi:</b> ______ / 6 &nbsp;&nbsp; <b>Ritun 1:</b> ______ / 16 &nbsp;&nbsp; <b>Ritun 2:</b> ______ / 16</p>
+ <p><b>Umsögn kennara:</b></p>
+ <div style="border-bottom:1px solid #999;height:28px"></div><div style="border-bottom:1px solid #999;height:28px"></div><div style="border-bottom:1px solid #999;height:28px"></div>`;
+}
+function reportText(){
+ const r=totals(READ), gr=totals(GRAM), b=totals([BONUS]);
+ const opens=ALLSEC.flatMap(s=>s.items).filter(it=>it.t==="open");
+ let t=`THE PUFFLING MYSTERY – SKILABLAÐ\nNafn: ${S.name}  Bekkur: ${S.cls}  Dags.: ${new Date().toLocaleDateString("is-IS")}\n\n`;
+ t+=`Lesskilningur: ${r.g}/${r.max}\nMálfræði: ${gr.g}/${gr.max}\nPipar-áskorun: ${b.g}/${b.max}\n\nOPIN SVÖR\n`;
+ opens.forEach(it=>{t+=`- ${it.q.replace(/<[^>]+>/g,"")}\n  ${S.ans[it.id]||"(ekki svarað)"}\n`});
+ t+=`\nRITUN 1: ${S.write.choice!==null?WRITE_MAIN[S.write.choice].title:"-"} (${wc(S.write.main)} orð)\n${S.write.main}\n\nRITUN 2: Tölvupóstur (${wc(S.write.short)} orð)\n${S.write.short}\n\nSJÁLFSMAT\n`;
+ SELF.forEach((s,i)=>{t+=`- ${s} ${Number.isInteger(S.self[i])?LEVELS[S.self[i]]:"-"}\n`});
+ t+=`Erfiðast: ${S.selfText.hard}\nSkemmtilegast: ${S.selfText.fun}\n`;
+ return t;
+}
+
+/* ================= ATBURÐIR ================= */
+function rerenderItem(id){const el=document.getElementById("it-"+id);if(el)el.outerHTML=renderItem(ITEM[id],!!S.done[ITEMSEC[id]])}
+function showTab(name){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.id==="tab-"+name));document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));window.scrollTo({top:0})}
+function check(secId){
+ if(S.done[secId])return;
+ const sec=SEC[secId], miss=sec.items.filter(it=>!answered(it)).length, w=document.getElementById("warn-"+secId);
+ if(miss&&w&&w.dataset.armed!=="1"){w.dataset.armed="1";w.textContent=`Þú átt eftir að svara ${miss===1?"einni spurningu":miss+" spurningum"}. Smelltu aftur ef þú vilt fara yfir samt.`;return}
+ let g=0,t=0;sec.items.forEach(it=>{const r=grade(it);g+=r[0];t+=r[1]});
+ S.done[secId]=true;S.score[secId]=[g,t];save();renderAll();
+ const el=document.getElementById("sec-"+secId);if(el)el.lastElementChild.scrollIntoView({block:"center"});
+}
+document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b){if(b.dataset.tab==="assess")renderAssess();showTab(b.dataset.tab)}});
+document.addEventListener("click",e=>{
+ const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+ const a=b.dataset.act,id=b.dataset.id;
+ if(id&&S.done[ITEMSEC[id]])return;
+ switch(a){
+  case "mc":case "err":S.ans[id]=+b.dataset.v;save();rerenderItem(id);break;
+  case "tok":{const arr=S.ans[id]||[];const v=+b.dataset.v;if(!arr.includes(v))arr.push(v);S.ans[id]=arr;save();rerenderItem(id);break}
+  case "untok":{const arr=S.ans[id]||[];arr.splice(+b.dataset.k,1);S.ans[id]=arr;save();rerenderItem(id);break}
+  case "clr":S.ans[id]=[];save();rerenderItem(id);break;
+  case "check":check(b.dataset.sec);break;
+  case "go":if(!S.name.trim()){const w=document.getElementById("startWarn");w.textContent="Skrifaðu nafnið þitt fyrst.";w.style.color="var(--orange-d)";document.getElementById("nameIn").focus();return}showTab("read");break;
+  case "wchoice":S.write.choice=+b.dataset.v;save();renderWrite();break;
+  case "self":S.self[+b.dataset.i]=+b.dataset.v;save();renderAssess();renderHeader();break;
+  case "print":buildReport();window.print();break;
+  case "copy":{const txt=reportText(),m=document.getElementById("copyMsg");
+   const done=()=>m.textContent="Afritað! Límdu textann þar sem kennarinn bað um.";
+   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));else fallbackCopy(txt,done);break}
+  case "reset":if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="Ertu viss? Smelltu aftur – öllum svörum verður eytt.";return}
+   {const nm=S.name;S=blank();if(LOGGED)S.name=nm;save();renderAll();showTab("start");break}
+ }
+});
+function fallbackCopy(txt,cb){const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");cb()}catch(e){}ta.remove()}
+document.addEventListener("input",e=>{
+ const el=e.target,a=el.dataset&&el.dataset.act;if(!a)return;const id=el.dataset.id;
+ switch(a){
+  case "gap":S.ans[id]=el.value;break;
+  case "open":S.ans[id]=el.value;document.getElementById("wc-"+id).textContent=wc(el.value)+" orð";break;
+  case "name":S.name=el.value;renderHeader();break;
+  case "cls":S.cls=el.value;renderHeader();break;
+  case "wtext":{const k=el.dataset.k;S.write[k]=el.value;const n=wc(el.value),[lo,hi]=k==="main"?[120,200]:[50,90];const w=document.getElementById("wc-"+k);w.textContent=`${n} orð (markmið: ${lo}–${hi})`;w.classList.toggle("ok",n>=lo&&n<=hi);renderHeader();break}
+  case "selftext":S.selfText[el.dataset.k]=el.value;break;
+  default:return;
+ }
+ save();
+});
+document.addEventListener("change",e=>{
+ const el=e.target,a=el.dataset&&el.dataset.act;if(!a)return;const id=el.dataset.id;
+ if(a==="sel"){S.ans[id]=el.value===""?undefined:+el.value;save()}
+ else if(a==="match"){const m=S.ans[id]||{};m[+el.dataset.i]=el.value===""?undefined:+el.value;S.ans[id]=m;save()}
+ else if(a==="wcheck"){S.checks[+el.dataset.i]=el.checked;save()}
+});
+window.addEventListener("beforeprint",buildReport);
+
+if(TEACHER)document.getElementById("teacherTabBtn").style.display="";
+renderAll();
+if(SKIL){
+ SKIL.init({slug:"puffling-mystery",title:"The Puffling Mystery",subject:"Enska"}).then(rec=>{
+  if(!rec)return;
+  LOGGED=true;
+  KEY=KEY_BASE+"_"+SKIL.code();
+  const local=load(), remote=rec.data&&rec.data.ans?rec.data:null;
+  S=remote&&(remote._t||0)>(local._t||0)?Object.assign(blank(),remote):local;
+  S.name=rec.name||SKIL.name;
+  FEEDBACK={feedback:rec.feedback,teacher_score:rec.teacher_score};
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  renderAll();
+ });
+}
+</script>
+</body>
+</html>

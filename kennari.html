@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kennsluhub – yfirlit kennara</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="skil.js"></script>
+<style>
+:root{--navy:#14213d;--sea:#1d3557;--bg:#eef3f7;--orange:#f2762e;--green:#2a9d8f;--yellow:#f4c542;--red:#d1495b;--ink:#1f2937;--muted:#64748b;--line:#dde3ea}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+header{background:var(--navy);color:#fff;padding:14px 20px 0}
+.hw{max-width:1300px;margin:0 auto}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.3rem}
+.top .me{margin-left:auto;font-size:.88rem;opacity:.85}
+.top .me button{margin-left:8px}
+nav{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+nav button{background:transparent;border:0;color:#cbd5e1;padding:9px 14px;font:inherit;font-weight:600;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap}
+nav button.active{background:var(--bg);color:var(--navy)}
+nav .badge{background:var(--orange);color:#fff;border-radius:999px;padding:0 7px;font-size:.75rem;margin-left:5px}
+main{max-width:1300px;margin:0 auto;padding:18px 20px}
+.tab{display:none}.tab.active{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:1.1rem;color:var(--navy)}
+.card h3{margin:12px 0 6px;font-size:1rem}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{font:inherit;font-size:.9rem;font-weight:600;padding:7px 14px;border-radius:9px;border:1.5px solid var(--sea);background:#fff;color:var(--sea);cursor:pointer}
+.btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.sm{padding:3px 9px;font-size:.82rem}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn.armed{background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{border-color:rgba(255,255,255,.4);color:#fff;background:transparent}
+input[type=text],input[type=email],input[type=password],select,textarea{font:inherit;padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff}
+textarea{width:100%;min-height:90px;resize:vertical}
+.muted{color:var(--muted);font-size:.88rem}
+.login{max-width:360px;margin:60px auto}
+.login input{width:100%;margin-bottom:10px}
+/* Stöðutafla */
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid var(--line)}
+.gridwrap{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+table.grid{border-collapse:separate;border-spacing:0;font-size:.88rem;min-width:100%}
+.grid th,.grid td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}
+.grid thead th{position:sticky;top:0;background:#f7f9fb;z-index:2;padding:8px 10px;text-align:left;vertical-align:bottom;min-width:120px;max-width:170px;font-weight:600}
+.grid thead th .sub{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.grid th.name,.grid td.name{position:sticky;left:0;background:#fff;z-index:1;padding:8px 12px;min-width:140px;font-weight:600;white-space:nowrap}
+.grid thead th.name{z-index:3;background:#f7f9fb}
+.cell{display:block;width:100%;min-height:42px;border:0;font:inherit;font-size:.85rem;padding:6px 8px;text-align:center;cursor:pointer;background:#fff;color:var(--muted)}
+.cell.opnad{background:#eef2f6;color:#475569}
+.cell.i_vinnslu{background:#fff3cd;color:#7a5600}
+.cell.lokid{background:#ffe1cc;color:#9a420c;font-weight:700}
+.cell.metid{background:#d5f0ea;color:#17675d;font-weight:700}
+.cell:hover{outline:2px solid var(--sea);outline-offset:-2px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;box-shadow:0 0 0 2px #fff}
+.grid tfoot td{background:#f7f9fb;padding:6px 10px;font-size:.8rem;color:var(--muted)}
+/* Hliðarspjald */
+.panel{position:fixed;top:0;right:0;width:min(620px,100%);height:100%;background:#fff;box-shadow:-10px 0 30px rgba(0,0,0,.18);z-index:50;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .2s}
+.panel.open{transform:none}
+.panel .ph{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.panel .ph h2{margin:0;font-size:1.1rem;color:var(--navy)}
+.panel .pb{padding:14px 18px;overflow:auto;flex:1}
+.panel pre{white-space:pre-wrap;font-family:Georgia,serif;font-size:.95rem;background:#fbfaf6;border:1px solid var(--line);border-radius:10px;padding:12px;margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:.9rem;margin-bottom:12px}
+.kv b{color:var(--muted);font-weight:600}
+/* Hópar */
+details.grp{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+details.grp summary{padding:12px 16px;cursor:pointer;font-weight:700;color:var(--navy);list-style:none;display:flex;gap:10px;align-items:center}
+details.grp summary::-webkit-details-marker{display:none}
+details.grp .gb{padding:0 16px 14px}
+table.simple{border-collapse:collapse;width:100%;font-size:.9rem}
+.simple th,.simple td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--orange);color:#fff}
+.tag.grey{background:#94a3b8}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:10px;font-size:.9rem;display:none;z-index:100}
+#printArea{display:none}
+@media print{
+ body>*:not(#printArea){display:none!important}
+ #printArea{display:block}
+ .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+ .kort{border:1px dashed #888;padding:14px 12px;text-align:center;page-break-inside:avoid;font-family:system-ui,sans-serif;height:4.6cm}
+ .kort .n{font-size:13pt;font-weight:700}
+ .kort .c{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20pt;font-weight:800;letter-spacing:2px;margin:8px 0}
+ .kort .u{font-size:8.5pt;color:#333}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="hw">
+  <div class="top"><h1>📋 Kennsluhub – yfirlit kennara</h1><div class="me" id="me"></div></div>
+  <nav id="nav" style="display:none">
+   <button data-tab="yfirlit" class="active">Yfirlit</button>
+   <button data-tab="hopar">Hópar og nemendur</button>
+   <button data-tab="verkefni">Verkefni <span id="newBadge"></span></button>
+   <button data-tab="stillingar">Stillingar</button>
+  </nav>
+ </div>
+</header>
+<main>
+ <div id="loginView" style="display:none">
+  <form class="card login" id="loginForm">
+   <h2>Innskráning kennara</h2>
+   <input type="email" name="email" placeholder="Netfang" required autocomplete="username">
+   <input type="password" name="pw" placeholder="Lykilorð" required autocomplete="current-password">
+   <button class="btn pri" style="width:100%">Skrá inn</button>
+   <p class="muted" id="loginErr"></p>
+  </form>
+ </div>
+ <section class="tab active" id="tab-yfirlit"></section>
+ <section class="tab" id="tab-hopar"></section>
+ <section class="tab" id="tab-verkefni"></section>
+ <section class="tab" id="tab-stillingar"></section>
+</main>
+<aside class="panel" id="panel"><div class="ph"><div style="flex:1" id="panelHead"></div><button class="btn sm" data-a="closePanel">Loka ✕</button></div><div class="pb" id="panelBody"></div></aside>
+<div id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+const C = window.SKIL_CONFIG;
+const sb = supabase.createClient(C.url, C.key);
+const WORDS = ["LUNDI","HVALUR","REFUR","SELUR","KRUMMI","HESTUR","KISA","HUNDUR","UGLA","LAX","MINKUR","HREINN","ELGUR","ORMUR","KRABBI","HUMAR","SVANUR","HRAFN","FOLALD","LAMB","STJARNA","HRAUN","FOSS","BRIM","SKUGGI","GULL","SILFUR","KLETTUR","STEINN","VINDUR","REGNBOGI","EYJA","HEKLA","KATLA","ESJA","GRETTIR","FREYJA","LOKI","ASKUR","EMBLA","SAGA","NORNA","DREKI","TRUNTA","RISI"];
+const DIG = "23456789";
+let D = {groups:[],students:[],members:[],tasks:[],gtasks:[],subs:[]};
+let curGroup = null, refreshTimer = null, lastLoad = null, openSub = null;
+
+/* ---------- Hjálparföll ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = d => d ? new Date(d).toLocaleString("is-IS",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "–";
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",3000)}
+function rnd(n){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}
+function newCode(taken){let c;do{c=WORDS[rnd(WORDS.length)]+"-"+DIG[rnd(8)]+DIG[rnd(8)]+DIG[rnd(8)]}while(taken.has(c));taken.add(c);return c}
+function chk(r){if(r.error){toast("Villa: "+r.error.message);throw r.error}return r.data}
+// Tveggja smella staðfesting á hættulegum aðgerðum
+function armed(btn){if(btn.dataset.armed==="1")return true;btn.dataset.armed="1";const t=btn.textContent;btn.classList.add("armed");btn.textContent="Smelltu aftur til að staðfesta";setTimeout(()=>{btn.dataset.armed="";btn.classList.remove("armed");btn.textContent=t},4000);return false}
+
+const groupStudents = gid => D.members.filter(m=>m.group_id===gid).map(m=>D.students.find(s=>s.id===m.student_id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,"is"));
+const groupTasks = gid => D.gtasks.filter(x=>x.group_id===gid).map(x=>D.tasks.find(t=>t.id===x.task_id)).filter(t=>t&&!t.hidden).sort((a,b)=>a.created_at<b.created_at?-1:1);
+const subOf = (sid,tid) => D.subs.find(x=>x.student_id===sid&&x.task_id===tid);
+const newTasks = () => D.tasks.filter(t=>!t.hidden && !D.gtasks.some(g=>g.task_id===t.id));
+function stateOf(sub){if(!sub)return "none";if(sub.reviewed_at&&sub.status==="lokid")return "metid";return sub.status}
+
+/* ---------- Gögn ---------- */
+async function load(){
+ const q=await Promise.all([
+  sb.from("groups").select("*").order("created_at"),
+  sb.from("students").select("*").order("name"),
+  sb.from("group_members").select("*"),
+  sb.from("tasks").select("*").order("created_at"),
+  sb.from("group_tasks").select("*"),
+  sb.from("submissions").select("id,student_id,task_id,status,progress,score,max_score,needs_review,feedback,teacher_score,reviewed_at,started_at,updated_at,completed_at").limit(10000)
+ ]);
+ const err=q.find(r=>r.error);if(err){toast("Villa við að sækja gögn: "+err.error.message);return}
+ [D.groups,D.students,D.members,D.tasks,D.gtasks,D.subs]=q.map(r=>r.data);
+ lastLoad=new Date();
+ const active=D.groups.filter(g=>!g.archived);
+ if(!curGroup||!active.some(g=>g.id===curGroup))curGroup=active[0]?.id||null;
+ renderAll();
+}
+function renderAll(){renderOverview();renderGroups();renderTasks();renderSettings();const n=newTasks().length;$("#newBadge").innerHTML=n?`<span class="badge">${n}</span>`:""}
+
+/* ---------- Yfirlit ---------- */
+function renderOverview(){
+ const el=$("#tab-yfirlit"), act=D.groups.filter(g=>!g.archived);
+ if(!act.length){el.innerHTML=`<div class="card"><h2>Velkominn!</h2><p>Byrjaðu á að búa til hóp undir <b>Hópar og nemendur</b>. Þegar nemendur opna verkefni birtast þau undir <b>Verkefni</b>, og þar virkjar þú þau fyrir hópinn.</p></div>`;return}
+ const st=groupStudents(curGroup), tk=groupTasks(curGroup);
+ const waiting=[];st.forEach(s=>tk.forEach(t=>{const x=subOf(s.id,t.id);if(x&&x.status==="lokid"&&x.needs_review&&!x.reviewed_at)waiting.push([s,t,x])}));
+ const now=Date.now();
+ let h=`<div class="card"><div class="row">
+   <label>Hópur: <select id="grpSel">${act.map(g=>`<option value="${g.id}" ${g.id===curGroup?"selected":""}>${esc(g.name)}</option>`).join("")}</select></label>
+   <label class="muted"><input type="checkbox" id="autoRef" ${refreshTimer?"checked":""}> Uppfæra sjálfkrafa (30 sek.)</label>
+   <button class="btn sm" data-a="reload">Uppfæra núna</button>
+   <span class="muted">Síðast sótt kl. ${lastLoad?lastLoad.toLocaleTimeString("is-IS",{hour:"2-digit",minute:"2-digit"}):"–"}</span></div>
+   <div class="legend"><span><i class="sw"></i>Ekki opnað</span><span><i class="sw" style="background:#eef2f6"></i>Opnað</span><span><i class="sw" style="background:#fff3cd"></i>Í vinnslu</span><span><i class="sw" style="background:#ffe1cc"></i>Lokið – bíður mats</span><span><i class="sw" style="background:#d5f0ea"></i>Lokið / metið</span><span><i class="live"></i> Að vinna núna</span></div>`;
+ if(waiting.length)h+=`<div class="muted" style="margin-top:4px"><b style="color:var(--orange)">Bíður mats (${waiting.length}):</b> ${waiting.map(([s,t,x])=>`<a href="#" data-a="openSub" data-id="${x.id}">${esc(s.name)} – ${esc(t.title||t.slug)}</a>`).join(" · ")}</div>`;
+ h+=`</div>`;
+ if(!st.length){el.innerHTML=h+`<div class="card">Enginn nemandi í þessum hópi enn.</div>`;bindOverview();return}
+ if(!tk.length){el.innerHTML=h+`<div class="card">Engin verkefni virk fyrir þennan hóp. Virkjaðu verkefni undir <b>Verkefni</b>.</div>`;bindOverview();return}
+ h+=`<div class="gridwrap"><table class="grid"><thead><tr><th class="name">Nemandi</th>${tk.map(t=>`<th title="${esc(t.title)}">${esc(t.title||t.slug)}<span class="sub">${esc(t.subject||"")}</span></th>`).join("")}</tr></thead><tbody>`;
+ st.forEach(s=>{
+  h+=`<tr><td class="name">${esc(s.name)}</td>`+tk.map(t=>{
+   const x=subOf(s.id,t.id), k=stateOf(x);
+   const live=x&&x.status!=="lokid"&&now-new Date(x.updated_at)<5*60e3?`<i class="live" title="Virk/ur síðustu 5 mín."></i>`:"";
+   let lab="–";
+   if(k==="opnad")lab="Opnað";
+   else if(k==="i_vinnslu")lab=(x.progress||0)+"%"+(x.teacher_score?` · ${esc(x.teacher_score)}`:"");
+   else if(k==="lokid"||k==="metid")lab=(x.max_score?`${+x.score}/${+x.max_score}`:"✓")+(k==="lokid"&&x.needs_review?" ✎":"")+(x.teacher_score?` · ${esc(x.teacher_score)}`:"");
+   return `<td><button class="cell ${k==="none"?"":k}" ${x?`data-a="openSub" data-id="${x.id}"`:"disabled"}>${lab}${live}</button></td>`}).join("")+`</tr>`;
+ });
+ h+=`</tbody><tfoot><tr><td class="name">Lokið</td>${tk.map(t=>{const n=st.filter(s=>{const x=subOf(s.id,t.id);return x&&x.status==="lokid"}).length;return `<td>${n} / ${st.length}</td>`}).join("")}</tr></tfoot></table></div>`;
+ el.innerHTML=h;bindOverview();
+}
+function bindOverview(){
+ const g=$("#grpSel");if(g)g.onchange=()=>{curGroup=g.value;renderOverview()};
+ const a=$("#autoRef");if(a)a.onchange=()=>{clearInterval(refreshTimer);refreshTimer=a.checked?setInterval(load,30000):null};
+}
+
+/* ---------- Hliðarspjald: svör nemanda og mat ---------- */
+async function openSubmission(id){
+ const x=D.subs.find(s=>s.id===id);if(!x)return;
+ const s=D.students.find(v=>v.id===x.student_id), t=D.tasks.find(v=>v.id===x.task_id);
+ openSub=id;
+ $("#panelHead").innerHTML=`<h2>${esc(s?.name)} – ${esc(t?.title||t?.slug)}</h2><div class="muted">${esc(t?.subject||"")}</div>`;
+ $("#panelBody").innerHTML="Sæki svör …";$("#panel").classList.add("open");
+ const r=await sb.from("submissions").select("summary,data").eq("id",id).single();
+ if(r.error){$("#panelBody").textContent="Villa: "+r.error.message;return}
+ const stLab={opnad:"Opnað",i_vinnslu:"Í vinnslu",lokid:"Lokið"}[x.status];
+ $("#panelBody").innerHTML=`
+  <div class="kv"><b>Staða</b><span>${stLab}${x.reviewed_at?" · metið "+fmt(x.reviewed_at):""}</span>
+   <b>Framvinda</b><span>${x.progress}%</span>
+   <b>Sjálfvirk stig</b><span>${x.max_score?`${+x.score} / ${+x.max_score}`:"–"}</span>
+   <b>Byrjaði</b><span>${fmt(x.started_at)}</span><b>Síðast virk/ur</b><span>${fmt(x.updated_at)}</span><b>Lauk</b><span>${fmt(x.completed_at)}</span></div>
+  ${t?.url?`<p><a href="${esc(t.url)}" target="_blank" rel="noopener">Opna verkefnið ↗</a></p>`:""}
+  <div class="card" style="background:#f7fbfa;border-color:#b7e2db">
+   <h2>Mat kennara</h2>
+   <label class="muted" style="display:block">Mat / einkunn (frjálst, t.d. „B+“ eða „12/16“)</label>
+   <input type="text" id="tScore" value="${esc(x.teacher_score)}" style="width:200px;margin:4px 0 10px;display:block">
+   <label class="muted" style="display:block">Umsögn – nemandinn sér hana á forsíðu kennsluhubbsins</label>
+   <textarea id="tFb">${esc(x.feedback)}</textarea>
+   <div class="row" style="margin-top:8px"><button class="btn pri" data-a="saveReview">Vista mat</button>${x.reviewed_at?`<button class="btn sm" data-a="unreview">Merkja sem ómetið</button>`:""}</div>
+  </div>
+  <h3>Svör nemanda</h3>
+  ${r.data.summary?`<pre>${esc(r.data.summary)}</pre>`:`<p class="muted">Verkefnið sendir engin svör, aðeins stöðu.</p>`}
+  ${r.data.data?`<details style="margin-top:10px"><summary class="muted">Hrá gögn</summary><pre style="font-family:ui-monospace,monospace;font-size:.75rem">${esc(JSON.stringify(r.data.data,null,1))}</pre></details>`:""}`;
+}
+async function saveReview(clear){
+ const x=D.subs.find(s=>s.id===openSub);if(!x)return;
+ const upd=clear?{reviewed_at:null,needs_review:true}:{feedback:$("#tFb").value.trim()||null,teacher_score:$("#tScore").value.trim()||null,reviewed_at:new Date().toISOString(),needs_review:false};
+ chk(await sb.from("submissions").update(upd).eq("id",openSub));
+ Object.assign(x,upd);toast(clear?"Merkt sem ómetið":"Mat vistað");renderOverview();openSubmission(openSub);
+}
+
+/* ---------- Hópar og nemendur ---------- */
+function renderGroups(){
+ const el=$("#tab-hopar");
+ let h=`<div class="card"><h2>Nýr hópur</h2>
+  <div class="row"><input type="text" id="ngName" placeholder="Nafn hóps, t.d. Enska – áskorunarhópur" style="flex:1;min-width:260px"></div>
+  <p class="muted" style="margin:10px 0 4px">Nemendur – eitt nafn í línu (fornafn og upphafsstafur dugar). Má sleppa og bæta við seinna.</p>
+  <textarea id="ngNames" placeholder="Anna J.&#10;Bjarki S.&#10;Freyja Ó."></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn pri" data-a="newGroup">Búa til hóp og kóða</button></div></div>`;
+ const others=g=>D.students.filter(s=>!D.members.some(m=>m.group_id===g.id&&m.student_id===s.id)).sort((a,b)=>a.name.localeCompare(b.name,"is"));
+ D.groups.slice().sort((a,b)=>a.archived-b.archived).forEach(g=>{
+  const st=groupStudents(g.id), ot=others(g);
+  h+=`<details class="grp" ${g.id===curGroup&&!g.archived?"open":""}><summary>${esc(g.name)} <span class="muted" style="font-weight:400">${st.length} nemendur</span>${g.archived?'<span class="tag grey">Í geymslu</span>':""}</summary><div class="gb">
+   <div class="row" style="margin-bottom:10px">
+    <button class="btn sm" data-a="cards" data-id="${g.id}">🖨️ Prenta kóðaspjöld</button>
+    <button class="btn sm" data-a="archive" data-id="${g.id}">${g.archived?"Taka úr geymslu":"Setja í geymslu"}</button>
+    <button class="btn sm red" data-a="delGroup" data-id="${g.id}">Eyða hópi</button>
+    <span class="muted">Að eyða hópi eyðir ekki nemendunum.</span></div>
+   ${st.length?`<table class="simple"><tr><th>Nafn</th><th>Kóði</th><th></th></tr>${st.map(s=>`<tr><td>${esc(s.name)}</td><td class="code">${esc(s.code)}</td><td style="text-align:right;white-space:nowrap">
+     <button class="btn sm" data-a="regen" data-id="${s.id}">Nýr kóði</button>
+     <button class="btn sm" data-a="unmember" data-id="${s.id}" data-g="${g.id}">Taka úr hópi</button>
+     <button class="btn sm red" data-a="delStudent" data-id="${s.id}">Eyða</button></td></tr>`).join("")}</table>`:`<p class="muted">Enginn nemandi enn.</p>`}
+   <h3>Bæta við nemendum</h3>
+   <textarea id="add-${g.id}" placeholder="Ný nöfn, eitt í línu" style="min-height:60px"></textarea>
+   <div class="row" style="margin-top:6px"><button class="btn sm pri" data-a="addNames" data-id="${g.id}">Bæta við nýjum nemendum</button>
+   ${ot.length?`<span class="muted">eða setja nemanda sem er þegar til:</span><select id="ex-${g.id}">${ot.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.code)})</option>`).join("")}</select><button class="btn sm" data-a="addExisting" data-id="${g.id}">Bæta í hóp</button>`:""}</div>
+  </div></details>`;
+ });
+ el.innerHTML=h;
+}
+async function createStudents(names,gid){
+ names=names.map(n=>n.trim()).filter(Boolean);if(!names.length)return;
+ const taken=new Set(D.students.map(s=>s.code));
+ const rows=names.map(n=>({name:n.slice(0,60),code:newCode(taken)}));
+ const ins=chk(await sb.from("students").insert(rows).select());
+ if(gid)chk(await sb.from("group_members").insert(ins.map(s=>({group_id:gid,student_id:s.id}))));
+ toast(`${ins.length} nemendur búnir til`);
+}
+function printCards(gid){
+ const g=D.groups.find(x=>x.id===gid), st=groupStudents(gid), hub=(C.hub||"").replace(/^https?:\/\//,"").replace(/\/$/,"");
+ $("#printArea").innerHTML=`<div class="cards">${st.map(s=>`<div class="kort"><div class="n">${esc(s.name)}</div><div class="c">${esc(s.code)}</div><div class="u">Farðu á <b>${esc(hub)}</b><br>og sláðu inn kóðann þinn.<br><i>${esc(g.name)}</i></div></div>`).join("")}</div>`;
+ window.print();
+}
+
+/* ---------- Verkefni ---------- */
+function renderTasks(){
+ const el=$("#tab-verkefni"), act=D.groups.filter(g=>!g.archived), nw=newTasks();
+ const row=t=>{
+  const n=D.subs.filter(x=>x.task_id===t.id).length;
+  return `<tr><td><b>${esc(t.title||t.slug)}</b>${t.url?` <a href="${esc(t.url)}" target="_blank" rel="noopener" class="muted">↗</a>`:""}<div class="muted">${esc(t.subject||"")} · ${esc(t.slug)} · fyrst opnað ${fmt(t.created_at)} · ${n} nemendur</div></td>
+   <td>${act.map(g=>`<label style="display:block;white-space:nowrap"><input type="checkbox" data-a="toggleGT" data-t="${t.id}" data-g="${g.id}" ${D.gtasks.some(x=>x.task_id===t.id&&x.group_id===g.id)?"checked":""}> ${esc(g.name)}</label>`).join("")||'<span class="muted">Enginn virkur hópur</span>'}</td>
+   <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-a="hideTask" data-id="${t.id}">${t.hidden?"Sýna":"Fela"}</button> <button class="btn sm red" data-a="delTask" data-id="${t.id}">Eyða</button></td></tr>`};
+ let h="";
+ if(nw.length)h+=`<div class="card" style="border-color:var(--orange)"><h2>Ný verkefni <span class="tag">${nw.length}</span></h2><p class="muted" style="margin-top:0">Nemendur hafa opnað þessi verkefni, en þau eru ekki virk í neinum hópi. Hakaðu við hópinn sem á að sjá verkefnið.</p><table class="simple">${nw.map(row).join("")}</table></div>`;
+ const rest=D.tasks.filter(t=>!nw.includes(t));
+ h+=`<div class="card"><h2>Öll verkefni</h2>${rest.length?`<table class="simple"><tr><th>Verkefni</th><th>Virkt fyrir</th><th></th></tr>${rest.map(row).join("")}</table>`:`<p class="muted">Engin önnur verkefni. Verkefni birtast hér sjálfkrafa þegar nemandi opnar síðu sem notar <code>skil.js</code>.</p>`}
+  <p class="muted">„Fela“ tekur verkefnið úr yfirliti og af verkefnalista nemenda en geymir svörin. „Eyða“ eyðir verkefninu og öllum svörum við því.</p></div>`;
+ el.innerHTML=h;
+}
+
+/* ---------- Stillingar ---------- */
+function renderSettings(){
+ $("#tab-stillingar").innerHTML=`
+ <div class="card"><h2>Staða gagnagrunns</h2><p>${D.groups.length} hópar · ${D.students.length} nemendur · ${D.tasks.length} verkefni · ${D.subs.length} skil</p></div>
+ <div class="card"><h2>Hreinsa skólaár</h2>
+  <p>Eyðir <b>öllum nemendum, kóðum og svörum</b>. Hópar og verkefni haldast svo þú getur byrjað nýtt skólaár með sömu verkefnum. Þetta er ekki hægt að afturkalla.</p>
+  <div class="row"><input type="text" id="wipeTxt" placeholder="Skrifaðu HREINSA"><button class="btn red" data-a="wipe">Hreinsa skólaár</button></div></div>`;
+}
+
+/* ---------- Atburðir ---------- */
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("[data-a]");if(!b)return;
+ const a=b.dataset.a, id=b.dataset.id;
+ if(b.tagName==="A")e.preventDefault();
+ try{switch(a){
+  case "reload":await load();break;
+  case "openSub":openSubmission(id);break;
+  case "closePanel":$("#panel").classList.remove("open");openSub=null;break;
+  case "saveReview":await saveReview(false);break;
+  case "unreview":await saveReview(true);break;
+  case "newGroup":{const name=$("#ngName").value.trim();if(!name){toast("Gefðu hópnum nafn");return}
+   const g=chk(await sb.from("groups").insert({name}).select().single());
+   await createStudents($("#ngNames").value.split("\n"),g.id);curGroup=g.id;await load();toast("Hópur búinn til");break}
+  case "addNames":await createStudents($("#add-"+id).value.split("\n"),id);await load();break;
+  case "addExisting":{const sid=$("#ex-"+id).value;chk(await sb.from("group_members").insert({group_id:id,student_id:sid}));await load();break}
+  case "unmember":chk(await sb.from("group_members").delete().eq("group_id",b.dataset.g).eq("student_id",id));await load();break;
+  case "regen":{if(!armed(b))return;const taken=new Set(D.students.map(s=>s.code));chk(await sb.from("students").update({code:newCode(taken)}).eq("id",id));await load();toast("Nýr kóði búinn til – gamli kóðinn virkar ekki lengur");break}
+  case "delStudent":if(!armed(b))return;chk(await sb.from("students").delete().eq("id",id));await load();toast("Nemanda eytt");break;
+  case "cards":printCards(id);break;
+  case "archive":{const g=D.groups.find(x=>x.id===id);chk(await sb.from("groups").update({archived:!g.archived}).eq("id",id));await load();break}
+  case "delGroup":if(!armed(b))return;chk(await sb.from("groups").delete().eq("id",id));await load();toast("Hópi eytt");break;
+  case "hideTask":{const t=D.tasks.find(x=>x.id===id);chk(await sb.from("tasks").update({hidden:!t.hidden}).eq("id",id));await load();break}
+  case "delTask":if(!armed(b))return;chk(await sb.from("tasks").delete().eq("id",id));await load();toast("Verkefni eytt");break;
+  case "wipe":if($("#wipeTxt").value.trim().toUpperCase()!=="HREINSA"){toast("Skrifaðu HREINSA í reitinn til að staðfesta");return}
+   chk(await sb.from("students").delete().not("id","is",null));await load();toast("Skólaár hreinsað");break;
+  case "logout":await sb.auth.signOut();location.reload();break;
+ }}catch(err){console.error(err)}
+});
+document.addEventListener("change",async e=>{
+ const c=e.target;if(c.dataset.a!=="toggleGT")return;
+ const r=c.checked?await sb.from("group_tasks").insert({group_id:c.dataset.g,task_id:c.dataset.t}):await sb.from("group_tasks").delete().eq("group_id",c.dataset.g).eq("task_id",c.dataset.t);
+ if(r.error){toast("Villa: "+r.error.message);c.checked=!c.checked;return}
+ await load();
+});
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;
+ document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));
+ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.id==="tab-"+b.dataset.tab));});
+addEventListener("keydown",e=>{if(e.key==="Escape")$("#panel").classList.remove("open")});
+
+/* ---------- Innskráning ---------- */
+$("#loginForm").onsubmit=async e=>{
+ e.preventDefault();const f=e.target;$("#loginErr").textContent="";
+ const r=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.pw.value});
+ if(r.error){$("#loginErr").textContent="Innskráning tókst ekki. Athugaðu netfang og lykilorð.";return}
+ start(r.data.session);
+};
+function start(session){
+ $("#loginView").style.display="none";$("#nav").style.display="";$("#tab-yfirlit").classList.add("active");
+ $("#me").innerHTML=`${esc(session.user.email)}<button class="btn sm ghost" data-a="logout">Skrá út</button>`;
+ load();
+}
+(async()=>{
+ if(!window.SKIL_CONFIG||/SETTU/.test(C.key)){document.body.innerHTML='<p style="padding:30px;font-family:system-ui">Settu slóð og lykil Supabase-verkefnisins efst í <b>skil.js</b>.</p>';return}
+ const {data}=await sb.auth.getSession();
+ if(data.session)start(data.session);else{$("#loginView").style.display="";document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))}
+})();
+</script>
+</body>
+</html>
