@@ -3,8 +3,8 @@
    Settu slóð og lykil Supabase-verkefnisins hér (Project Settings → API):
    ===================================================================== */
 window.SKIL_CONFIG = window.SKIL_CONFIG || {
-  url: "https://XXXXXXXX.supabase.co",   // Project URL
-  key: "SETTU-ANON-PUBLIC-LYKILINN-HER", // anon / public key (EKKI service_role)
+  url: "https://hsvxutspkrzxfuxqkgiy.supabase.co",   // Project URL
+  key: "sb_publishable_y8JFaUreNjRj36gxM4HD7g_MsFx9WgE", // anon / public key (EKKI service_role)
   hub: "https://steingrimursig.github.io/"
 };
 
